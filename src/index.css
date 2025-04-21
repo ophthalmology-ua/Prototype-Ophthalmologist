@@ -51,8 +51,22 @@ body {
 
 /* Custom focus styles */
 *:focus {
+  outline: none;
+}
+
+/* Focus styles for accessibility - only show outline when using keyboard */
+*:focus-visible {
   outline: 2px solid var(--primary);
   outline-offset: 2px;
+}
+
+/* Remove focus styles for buttons and interactive elements */
+button:focus, 
+a:focus, 
+[role="button"]:focus,
+.btn:focus {
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 /* Custom transitions */

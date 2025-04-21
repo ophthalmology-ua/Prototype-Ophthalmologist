@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Search, Filter, Plus, ChevronRight, Eye, Edit, Trash2, Calendar, AlertCircle, Users, Activity } from 'lucide-react';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Search, Filter, Plus, Eye, Edit, Trash2, Calendar, Users, Activity } from 'lucide-react';
 
 interface Patient {
   id: string;

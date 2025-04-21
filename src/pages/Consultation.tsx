@@ -12,7 +12,7 @@ const mockPatient = {
 };
 
 const Consultation = () => {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const [diagnosis, setDiagnosis] = useState(mockPatient.diagnosis);
   const [medication, setMedication] = useState('');
   const [dosage, setDosage] = useState('');
@@ -37,7 +37,7 @@ const Consultation = () => {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold text-gray-800 mb-6">Consultation</h1>
+      <h1 className="text-2xl font-bold text-gray-800 mb-6">Consultation {id}</h1>
 
       <div className="bg-white p-6 rounded-lg shadow">
         {/* Patient Info */}

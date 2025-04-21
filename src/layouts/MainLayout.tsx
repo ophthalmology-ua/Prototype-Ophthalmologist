@@ -7,8 +7,7 @@ import {
   Upload, 
   ClipboardList,
   Bell,
-  Settings,
-  LogOut
+  Settings
 } from 'lucide-react';
 
 const MainLayout = () => {
