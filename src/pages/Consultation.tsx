@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Mic, Save } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 // Mock patient data
 const mockPatient = {
@@ -13,11 +13,11 @@ const mockPatient = {
 
 const Consultation = () => {
   const { id } = useParams<{ id: string }>();
-  const [diagnosis, setDiagnosis] = useState(mockPatient.diagnosis);
+  const { t } = useLanguage();
+  const [diagnosis] = useState(mockPatient.diagnosis);
   const [medication, setMedication] = useState('');
   const [dosage, setDosage] = useState('');
   const [notes, setNotes] = useState('');
-  const [isRecording, setIsRecording] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,112 +30,98 @@ const Consultation = () => {
     });
   };
 
-  const toggleRecording = () => {
-    setIsRecording(!isRecording);
-    // Implement voice-to-text functionality here
-  };
-
   return (
-    <div className="max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold text-gray-800 mb-6">Consultation {id}</h1>
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-bold text-gray-800 mb-6">{t('consultation')} {id}</h1>
+      </div>
 
-      <div className="bg-white p-6 rounded-lg shadow">
-        {/* Patient Info */}
-        <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-          <h2 className="text-lg font-semibold mb-2">{mockPatient.name}</h2>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm text-gray-600">Age</p>
-              <p className="font-medium">{mockPatient.age}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Last Visit</p>
-              <p className="font-medium">{mockPatient.lastVisit}</p>
-            </div>
+      {/* Patient Info Card */}
+      <div className="bg-white rounded-xl shadow-sm p-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div>
+            <p className="text-sm text-gray-600">{t('name')}</p>
+            <p className="font-medium">John Doe</p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-600">{t('age')}</p>
+            <p className="font-medium">45 {t('years')}</p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-600">{t('lastVisit')}</p>
+            <p className="font-medium">2024-03-15</p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-600">{t('diagnosis')}</p>
+            <p className="font-medium">Diabetic Retinopathy</p>
           </div>
         </div>
+      </div>
 
+      {/* Consultation Form */}
+      <div className="bg-white rounded-xl shadow-sm p-6">
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Diagnosis */}
+          {/* Notes */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Diagnosis
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              {t('notes')}
             </label>
-            <select
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              value={diagnosis}
-              onChange={(e) => setDiagnosis(e.target.value)}
-            >
-              <option value="AMD">Age-related Macular Degeneration (AMD)</option>
-              <option value="DME">Diabetic Macular Edema (DME)</option>
-              <option value="RVO">Retinal Vein Occlusion (RVO)</option>
-              <option value="Other">Other</option>
-            </select>
+            <textarea
+              rows={4}
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder={t('enterNotes')}
+            />
           </div>
 
           {/* Medication */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Medication
-              </label>
-              <select
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                value={medication}
-                onChange={(e) => setMedication(e.target.value)}
-              >
-                <option value="">Select medication</option>
-                <option value="Aflibercept">Aflibercept</option>
-                <option value="Ranibizumab">Ranibizumab</option>
-                <option value="Bevacizumab">Bevacizumab</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Dosage
-              </label>
-              <input
-                type="text"
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                placeholder="Enter dosage"
-                value={dosage}
-                onChange={(e) => setDosage(e.target.value)}
-              />
-            </div>
-          </div>
-
-          {/* Notes */}
           <div>
-            <div className="flex justify-between items-center mb-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Notes
-              </label>
-              <button
-                type="button"
-                onClick={toggleRecording}
-                className={`p-2 rounded-full ${
-                  isRecording ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-600'
-                }`}
-              >
-                <Mic className="w-5 h-5" />
-              </button>
-            </div>
-            <textarea
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              rows={6}
-              placeholder="Enter consultation notes..."
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-            ></textarea>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              {t('medication')}
+            </label>
+            <input
+              type="text"
+              value={medication}
+              onChange={(e) => setMedication(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder={t('enterMedication')}
+            />
           </div>
 
-          <div className="flex justify-end">
-            <button
-              type="submit"
-              className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-            >
-              <Save className="w-5 h-5 mr-2" />
-              Save Consultation
+          {/* Dosage */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              {t('dosage')}
+            </label>
+            <input
+              type="text"
+              value={dosage}
+              onChange={(e) => setDosage(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder={t('enterDosage')}
+            />
+          </div>
+
+          {/* Next Appointment */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              {t('nextAppointment')}
+            </label>
+            <input
+              type="date"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          {/* Actions */}
+          <div className="flex justify-end space-x-4">
+            <button type="button" className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors">
+              {t('cancel')}
+            </button>
+            <button type="submit" className="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors">
+              {t('saveConsultation')}
             </button>
           </div>
         </form>

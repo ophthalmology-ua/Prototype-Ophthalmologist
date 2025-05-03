@@ -7,22 +7,29 @@ import Consultation from './pages/Consultation';
 import Appointments from './pages/Appointments';
 import Reports from './pages/Reports';
 import MainLayout from './layouts/MainLayout';
+import { LanguageProvider } from './contexts/LanguageContext';
+import Login from './pages/Login';
+import DiagnosisDetail from './pages/DiagnosisDetail';
 
 function App() {
   return (
-    <Router basename="/Lab-3-Prototype">
-      <Routes>
-        <Route path="/" element={<MainLayout />}>
-          <Route index element={<Dashboard />} />
-          <Route path="patients" element={<PatientList />} />
-          <Route path="patients/:id" element={<PatientProfile />} />
-          <Route path="upload" element={<UploadStudy />} />
-          <Route path="consultation/:id" element={<Consultation />} />
-          <Route path="appointments" element={<Appointments />} />
-          <Route path="reports" element={<Reports />} />
-        </Route>
-      </Routes>
-    </Router>
+    <LanguageProvider>
+      <Router basename="/Lab-3-Prototype">
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/" element={<MainLayout />}>
+            <Route index element={<Dashboard />} />
+            <Route path="patients" element={<PatientList />} />
+            <Route path="patients/:id" element={<PatientProfile />} />
+            <Route path="upload" element={<UploadStudy />} />
+            <Route path="consultation/:id" element={<Consultation />} />
+            <Route path="appointments" element={<Appointments />} />
+            <Route path="reports" element={<Reports />} />
+            <Route path="diagnosis/:id" element={<DiagnosisDetail />} />
+          </Route>
+        </Routes>
+      </Router>
+    </LanguageProvider>
   );
 }
 

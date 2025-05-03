@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Filter, Plus, Eye, Edit, Trash2, Calendar, Users, Activity } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface Patient {
   id: string;
@@ -51,6 +52,7 @@ export default function PatientList() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'Active' | 'Inactive' | 'Pending'>('all');
+  const { t } = useLanguage();
 
   const stats = {
     totalPatients: mockPatients.length,
@@ -85,12 +87,12 @@ export default function PatientList() {
       <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl shadow-lg p-6 mb-8">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold mb-2">Patient Management</h1>
-            <p className="text-blue-100">Streamline your patient care workflow</p>
+            <h1 className="text-2xl font-bold mb-2">{t('patientManagement')}</h1>
+            <p className="text-blue-100">{t('patientManagementDesc')}</p>
           </div>
           <button className="inline-flex items-center px-4 py-2 bg-white text-blue-600 rounded-md hover:bg-blue-50 transition-colors shadow-sm">
             <Plus className="w-4 h-4 mr-2" />
-            Add New Patient
+            {t('addNewPatient')}
           </button>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
@@ -100,7 +102,7 @@ export default function PatientList() {
                 <Users className="w-5 h-5" />
               </div>
               <div className="ml-3">
-                <p className="text-sm text-blue-100">Total Patients</p>
+                <p className="text-sm text-blue-100">{t('totalPatients')}</p>
                 <p className="text-2xl font-bold">{stats.totalPatients}</p>
               </div>
             </div>
@@ -111,7 +113,7 @@ export default function PatientList() {
                 <Activity className="w-5 h-5" />
               </div>
               <div className="ml-3">
-                <p className="text-sm text-blue-100">Active Patients</p>
+                <p className="text-sm text-blue-100">{t('activePatients')}</p>
                 <p className="text-2xl font-bold">{stats.activePatients}</p>
               </div>
             </div>
@@ -122,7 +124,7 @@ export default function PatientList() {
                 <Calendar className="w-5 h-5" />
               </div>
               <div className="ml-3">
-                <p className="text-sm text-blue-100">Pending Appointments</p>
+                <p className="text-sm text-blue-100">{t('pendingAppointments')}</p>
                 <p className="text-2xl font-bold">{stats.pendingAppointments}</p>
               </div>
             </div>
@@ -137,7 +139,7 @@ export default function PatientList() {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
               type="text"
-              placeholder="Search by name, ID, or diagnosis..."
+              placeholder={t('searchPatients')}
               className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -150,10 +152,10 @@ export default function PatientList() {
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value as any)}
             >
-              <option value="all">All Status</option>
-              <option value="Active">Active</option>
-              <option value="Inactive">Inactive</option>
-              <option value="Pending">Pending</option>
+              <option value="all">{t('allStatus')}</option>
+              <option value="Active">{t('active')}</option>
+              <option value="Inactive">{t('inactive')}</option>
+              <option value="Pending">{t('pending')}</option>
             </select>
           </div>
         </div>
@@ -192,7 +194,7 @@ export default function PatientList() {
                         >
                           {patient.name}
                         </button>
-                        <div className="text-sm text-gray-500">{patient.age} years • {patient.gender}</div>
+                        <div className="text-sm text-gray-500">{patient.age} {t('years')} • {patient.gender}</div>
                       </div>
                     </div>
                   </td>
@@ -209,12 +211,12 @@ export default function PatientList() {
                         <span className="text-sm text-gray-900">{patient.nextAppointment}</span>
                       </div>
                     ) : (
-                      <span className="text-sm text-gray-500">Not scheduled</span>
+                      <span className="text-sm text-gray-500">{t('notScheduled')}</span>
                     )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(patient.status)}`}>
-                      {patient.status}
+                      {t(patient.status)}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -222,14 +224,14 @@ export default function PatientList() {
                       <button 
                         onClick={() => navigate(`/patients/${patient.id}`)}
                         className="text-blue-600 hover:text-blue-800 transition-colors p-1 hover:bg-blue-50 rounded" 
-                        title="View Details"
+                        title={t('view')}
                       >
                         <Eye className="w-4 h-4" />
                       </button>
-                      <button className="text-gray-600 hover:text-gray-800 transition-colors p-1 hover:bg-gray-50 rounded" title="Edit Patient">
+                      <button className="text-gray-600 hover:text-gray-800 transition-colors p-1 hover:bg-gray-50 rounded" title={t('edit')}>
                         <Edit className="w-4 h-4" />
                       </button>
-                      <button className="text-red-600 hover:text-red-800 transition-colors p-1 hover:bg-red-50 rounded" title="Delete Patient">
+                      <button className="text-red-600 hover:text-red-800 transition-colors p-1 hover:bg-red-50 rounded" title={t('delete')}>
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>

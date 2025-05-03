@@ -1,8 +1,15 @@
 #root {
-  max-width: 1280px;
+  max-width: 100%;
   margin: 0 auto;
   padding: 2rem;
   text-align: center;
+}
+
+/* Hide horizontal overflow at the root level but allow vertical scrolling */
+html,
+body {
+  overflow-x: hidden;
+  width: 100%;
 }
 
 .logo {

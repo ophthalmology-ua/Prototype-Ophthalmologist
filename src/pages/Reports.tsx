@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { FileText, Download, Edit2 } from 'lucide-react';
+import { FileText, Download, Edit2, ClipboardList, Stethoscope } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 // Mock reports data
 const mockReports = [
@@ -27,6 +28,7 @@ const mockReports = [
 ];
 
 const Reports = () => {
+  const { t } = useLanguage();
   const [selectedReportType, setSelectedReportType] = useState('all');
   const [selectedPatient, setSelectedPatient] = useState('');
 
@@ -38,7 +40,7 @@ const Reports = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-800">Reports</h1>
+        <h1 className="text-2xl font-bold text-gray-800">{t('reports')}</h1>
         <div className="flex space-x-4">
           <select
             className="border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -62,50 +64,59 @@ const Reports = () => {
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <button
-          onClick={() => handleGenerateReport('Clinical Summary')}
-          className="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow"
-        >
-          <div className="flex items-center">
-            <div className="p-3 bg-blue-100 rounded-full">
-              <FileText className="w-6 h-6 text-blue-600" />
+        <div className="bg-white rounded-xl shadow-sm p-6">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-800">{t('clinicalSummary')}</h3>
+                <p className="text-sm text-gray-600">{t('clinicalSummaryDesc')}</p>
+              </div>
+              <FileText className="w-8 h-8 text-blue-500" />
             </div>
-            <div className="ml-4">
-              <h3 className="text-lg font-semibold text-gray-800">Clinical Summary</h3>
-              <p className="text-sm text-gray-600">Generate insurance authorization report</p>
-            </div>
+            <button
+              onClick={() => handleGenerateReport('Clinical Summary')}
+              className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              {t('generateReport')}
+            </button>
           </div>
-        </button>
+        </div>
 
-        <button
-          onClick={() => handleGenerateReport('Prescription')}
-          className="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow"
-        >
-          <div className="flex items-center">
-            <div className="p-3 bg-green-100 rounded-full">
-              <FileText className="w-6 h-6 text-green-600" />
+        <div className="bg-white rounded-xl shadow-sm p-6">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-800">{t('prescription')}</h3>
+                <p className="text-sm text-gray-600">{t('prescriptionDesc')}</p>
+              </div>
+              <ClipboardList className="w-8 h-8 text-blue-500" />
             </div>
-            <div className="ml-4">
-              <h3 className="text-lg font-semibold text-gray-800">Prescription</h3>
-              <p className="text-sm text-gray-600">Generate medication prescription</p>
-            </div>
+            <button
+              onClick={() => handleGenerateReport('Prescription')}
+              className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              {t('generatePrescription')}
+            </button>
           </div>
-        </button>
+        </div>
 
-        <button
-          onClick={() => handleGenerateReport('Surgical Request')}
-          className="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow"
-        >
-          <div className="flex items-center">
-            <div className="p-3 bg-yellow-100 rounded-full">
-              <FileText className="w-6 h-6 text-yellow-600" />
+        <div className="bg-white rounded-xl shadow-sm p-6">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-800">{t('surgicalRequest')}</h3>
+                <p className="text-sm text-gray-600">{t('surgicalRequestDesc')}</p>
+              </div>
+              <Stethoscope className="w-8 h-8 text-blue-500" />
             </div>
-            <div className="ml-4">
-              <h3 className="text-lg font-semibold text-gray-800">Surgical Request</h3>
-              <p className="text-sm text-gray-600">Generate surgical authorization request</p>
-            </div>
+            <button
+              onClick={() => handleGenerateReport('Surgical Request')}
+              className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              {t('generateRequest')}
+            </button>
           </div>
-        </button>
+        </div>
       </div>
 
       {/* Reports List */}
