@@ -180,3 +180,9 @@ const MainLayout = () => {
 };
 
 export default MainLayout; 
+// This is the main layout for the application. It is used to wrap the main content of the application.
+// It includes a sidebar for navigation, a top navigation bar, and a main content area.
+// The sidebar is hidden on desktop and shown on mobile.
+// The top navigation bar is hidden on mobile and shown on desktop.
+// The main content area is the main content of the page.
+// The main content area is the main content of the page.
