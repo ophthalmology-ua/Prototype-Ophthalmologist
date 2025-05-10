@@ -10,6 +10,7 @@ import MainLayout from './layouts/MainLayout';
 import { LanguageProvider } from './contexts/LanguageContext';
 import Login from './pages/Login';
 import DiagnosisDetail from './pages/DiagnosisDetail';
+import RecordDetail from './pages/RecordDetail';
 
 function App() {
   return (
@@ -20,12 +21,13 @@ function App() {
           <Route path="/" element={<MainLayout />}>
             <Route index element={<Dashboard />} />
             <Route path="patients" element={<PatientList />} />
-            <Route path="patients/:id" element={<PatientProfile />} />
+            <Route path="patientInfo/:id" element={<PatientProfile />} />
             <Route path="upload" element={<UploadStudy />} />
             <Route path="consultation/:id" element={<Consultation />} />
             <Route path="appointments" element={<Appointments />} />
             <Route path="reports" element={<Reports />} />
             <Route path="diagnosis/:id" element={<DiagnosisDetail />} />
+            <Route path="records/:id" element={<RecordDetail />} />
           </Route>
         </Routes>
       </Router>

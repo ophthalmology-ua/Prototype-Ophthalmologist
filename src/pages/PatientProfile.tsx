@@ -11,7 +11,8 @@ import {
   ChevronRight,
   Plus,
   TrendingUp,
-  Upload
+  Upload,
+  ClipboardList
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, Legend } from 'recharts';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -210,12 +211,41 @@ const mockProgressionDataByDiagnosis: Record<string, ProgressionData> = {
   }
 };
 
+const mockRecentStudies = [
+  { id: '1', name: 'OCT', date: '2024-02-01', type: 'Estudio' },
+  { id: '2', name: 'Consulta', date: '2024-06-02', type: 'Consulta' }
+];
+
 const PatientProfile = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
   const { t, language } = useLanguage();
   const [selectedDiagnosis, setSelectedDiagnosis] = useState('dmae');
+  const [pendingActions, setPendingActions] = useState([
+    'Sacar turno de control',
+    'Realizar estudio OCT',
+    'Actualizar datos de contacto'
+  ]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newPending, setNewPending] = useState('');
+
+  const handleAddPending = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleModalAdd = () => {
+    if (newPending.trim() !== '') {
+      setPendingActions(prev => [...prev, newPending.trim()]);
+      setNewPending('');
+      setIsModalOpen(false);
+    }
+  };
+
+  const handleModalCancel = () => {
+    setNewPending('');
+    setIsModalOpen(false);
+  };
 
   const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString(language === 'en' ? 'en-US' : 'es-ES', {
@@ -330,7 +360,7 @@ const PatientProfile = () => {
                 onClick={() => navigate(`/upload?patientId=${id}`)}
               >
                 <Upload className="w-6 h-6 mb-1" />
-                <span>Subir estudio</span>
+                <span>Subir</span>
               </button>
             </div>
           </div>
@@ -402,42 +432,8 @@ const PatientProfile = () => {
                         <p className="font-medium">{mockPatient.email}</p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-500">{t('primaryPhysician')}</p>
-                        <p className="font-medium">{mockPatient.primaryPhysician}</p>
-                      </div>
-                      <div>
                         <p className="text-sm text-gray-500">{t('lastVisit')}</p>
                         <p className="font-medium">{mockPatient.lastVisit}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Current Treatment Plan */}
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold text-gray-900">{t('currentTreatmentPlan')}</h3>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-sm text-gray-500">{t('currentMedication')}</p>
-                        <p className="font-medium">{mockPatient.treatmentPlan.medication}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500">{t('frequency')}</p>
-                        <p className="font-medium">{mockPatient.treatmentPlan.frequency}</p>
-                      </div>
-                      <div className="col-span-2">
-                        <p className="text-sm text-gray-500">{t('nextStep')}</p>
-                        <div className="flex items-center justify-between mt-1">
-                          <p className="font-medium">{mockPatient.treatmentPlan.nextStep}</p>
-                          {mockPatient.treatmentPlan.nextStepScheduled ? (
-                            <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
-                              Scheduled for {mockPatient.treatmentPlan.nextStepDue}
-                            </span>
-                          ) : (
-                            <span className="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full">
-                              Not Scheduled
-                            </span>
-                          )}
-                        </div>
                       </div>
                     </div>
                   </div>
@@ -600,15 +596,34 @@ const PatientProfile = () => {
               <div className="space-y-4">
                 <div className="bg-white rounded-lg p-4 shadow-sm">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Estudios recientes</h3>
-                  <ul className="divide-y divide-gray-100">
-                    <li className="py-2 flex justify-between items-center cursor-pointer hover:bg-blue-50 rounded transition">
-                      <span>OCT</span>
-                      <span className="text-gray-500 text-sm">2024-02-01</span>
-                    </li>
-                    <li className="py-2 flex justify-between items-center cursor-pointer hover:bg-blue-50 rounded transition">
-                      <span>Angiografía</span>
-                      <span className="text-gray-500 text-sm">2024-01-10</span>
-                    </li>
+                  <ul>
+                    {mockRecentStudies.map(study => (
+                      <li
+                        key={study.id}
+                        onClick={() => navigate(`/records/${study.id}`)}
+                        className="flex items-center justify-between p-4 bg-gray-50 rounded-lg shadow-sm mb-2 cursor-pointer hover:bg-blue-50 transition border border-gray-100"
+                      >
+                        <div className="flex items-center gap-3">
+                          {study.type === 'Consulta' ? (
+                            <span className="bg-green-100 text-green-700 rounded-full p-2">
+                              <ClipboardList className="w-5 h-5" />
+                            </span>
+                          ) : (
+                            <span className="bg-blue-100 text-blue-700 rounded-full p-2">
+                              <FileText className="w-5 h-5" />
+                            </span>
+                          )}
+                          <div>
+                            <div className="font-semibold">{study.name}</div>
+                            <div className="text-xs text-gray-500">{study.type}</div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Calendar className="w-4 h-4 text-gray-400" />
+                          <span className="text-sm text-gray-600">{study.date}</span>
+                        </div>
+                      </li>
+                    ))}
                   </ul>
                 </div>
               </div>
@@ -616,15 +631,50 @@ const PatientProfile = () => {
 
             {activeTab === 'pending' && (
               <div className="space-y-4">
+                <button
+                  className="mb-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition font-medium"
+                  onClick={handleAddPending}
+                >
+                  Agregar pendiente
+                </button>
+                {isModalOpen && (
+                  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
+                    <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-sm">
+                      <h3 className="text-lg font-semibold mb-4">Agregar acción pendiente</h3>
+                      <input
+                        type="text"
+                        className="w-full border border-gray-300 rounded px-3 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                        placeholder="Describe la acción pendiente..."
+                        value={newPending}
+                        onChange={e => setNewPending(e.target.value)}
+                        autoFocus
+                      />
+                      <div className="flex justify-end gap-2">
+                        <button
+                          className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 transition"
+                          onClick={handleModalCancel}
+                        >
+                          Cancelar
+                        </button>
+                        <button
+                          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition font-medium"
+                          onClick={handleModalAdd}
+                          disabled={newPending.trim() === ''}
+                        >
+                          Agregar
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
                 <div className="bg-yellow-50 rounded-lg p-4 flex items-center gap-4">
                   <AlertCircle className="w-6 h-6 text-yellow-600" />
                   <div>
                     <p className="font-semibold text-yellow-800">Acciones pendientes</p>
                     <ul className="list-disc ml-5 text-yellow-900">
-                      <li>Sacar turno de control</li>
-                      <li>Realizar estudio OCT</li>
-                      <li>Actualizar datos de contacto</li>
-                      {/* Aquí puedes agregar más acciones según la lógica real */}
+                      {pendingActions.map((action, idx) => (
+                        <li key={idx}>{action}</li>
+                      ))}
                     </ul>
                   </div>
                 </div>

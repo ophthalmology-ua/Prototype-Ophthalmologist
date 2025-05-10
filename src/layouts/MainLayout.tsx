@@ -17,7 +17,10 @@ const MainLayout = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const isActiveRoute = (path: string) => {
-    return location.pathname === path;
+    if (path === '/') {
+      return location.pathname === path;
+    }
+    return location.pathname.startsWith(path);
   };
 
   const navigation = [
@@ -25,6 +28,14 @@ const MainLayout = () => {
     { name: t('patients'), path: '/patients', icon: Users },
     { name: t('appointments'), path: '/appointments', icon: Calendar }
   ];
+
+  const getPageTitle = () => {
+    if (location.pathname.startsWith('/patientInfo/')) {
+      return t('patientInfo'); // or t('patientInformation') if you prefer
+    }
+    const navItem = navigation.find(item => isActiveRoute(item.path));
+    return navItem ? navItem.name : t('dashboard');
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row">
@@ -148,7 +159,7 @@ const MainLayout = () => {
         <header className="hidden md:block sticky top-0 z-20 bg-white border-b border-gray-100">
           <div className="h-16 px-8 flex items-center justify-between">
             <h2 className="text-xl font-semibold text-gray-800">
-              {navigation.find(item => isActiveRoute(item.path))?.name || t('dashboard')}
+              {getPageTitle()}
             </h2>
             <div className="flex items-center space-x-4">
               <LanguageSwitcher />

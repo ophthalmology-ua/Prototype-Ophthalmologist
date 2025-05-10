@@ -1,5 +1,5 @@
 {
-  "dashboard": "Dashboard",
+  "dashboard": "Home",
   "patients": "Patients",
   "appointments": "Appointments",
   "uploadStudy": "Upload Study",
@@ -63,6 +63,7 @@
   "dosage": "Dosage",
   "saveConsultation": "Save Consultation",
   "patientInfo": "Patient Information",
+  "patientInformation": "Patient Information",
   "startRecording": "Start Recording",
   "stopRecording": "Stop Recording",
   "selectFiles": "Select Files",
@@ -115,5 +116,18 @@
   "download": "Download",
   "searchAppointments": "Search appointments...",
   "completed": "Completed",
-  "date": "Date"
+  "date": "Date",
+  "uploadConsultation": "Upload Consultation",
+  "file": "File",
+  "uploadedAt": "Uploaded at",
+  "back": "Back",
+  "rightEye": "Right Eye",
+  "leftEye": "Left Eye",
+  "distanceVision": "Distance Vision",
+  "nearVision": "Near Vision",
+  "withGlasses": "With Glasses",
+  "additionalNotes": "Additional Notes",
+  "enterDistanceVision": "e.g., 20/20",
+  "enterNearVision": "e.g., J1",
+  "enterAdditionalNotes": "Enter any additional observations..."
 } 

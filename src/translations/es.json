@@ -1,5 +1,5 @@
 {
-  "dashboard": "Info del Paciente",
+  "dashboard": "Inicio",
   "patients": "Pacientes",
   "appointments": "Citas",
   "uploadStudy": "Subir Estudio",
@@ -58,6 +58,7 @@
   "years": "años",
   "patientProfile": "Perfil del Paciente",
   "patientInfo": "Información del Paciente",
+  "patientInformation": "Información del Paciente",
   "contactNumber": "Número de Contacto",
   "email": "Correo Electrónico",
   "primaryPhysician": "Médico Principal",
@@ -79,7 +80,7 @@
   "enterNotes": "Ingrese notas de la consulta...",
   "enterMedication": "Ingrese medicación",
   "enterDosage": "Ingrese dosis",
-  "saveConsultation": "Guardar Consulta",
+  "saveConsultation": "Guardar consulta",
   "dragAndDrop": "Arrastre y suelte archivos aquí",
   "orClickToUpload": "o haga clic para subir",
   "selectFiles": "Seleccionar Archivos",
@@ -119,5 +120,18 @@
   "urgency": "Urgencia",
   "normal": "Normal",
   "urgent": "Urgente",
-  "followUp": "Seguimiento"
+  "followUp": "Seguimiento",
+  "uploadConsultation": "Subir consulta",
+  "file": "Archivo",
+  "uploadedAt": "Subido el",
+  "back": "Volver",
+  "rightEye": "Ojo derecho",
+  "leftEye": "Ojo izquierdo",
+  "distanceVision": "Visión lejana",
+  "nearVision": "Visión cercana",
+  "withGlasses": "Con anteojos",
+  "additionalNotes": "Notas adicionales",
+  "enterDistanceVision": "ej., 20/20",
+  "enterNearVision": "ej., J1",
+  "enterAdditionalNotes": "Ingrese cualquier observación adicional..."
 } 

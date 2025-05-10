@@ -189,7 +189,7 @@ export default function PatientList() {
                       </div>
                       <div className="ml-4">
                         <button
-                          onClick={() => navigate(`/patients/${patient.id}`)}
+                          onClick={() => navigate(`/patientInfo/${patient.id}`)}
                           className="text-sm font-medium text-gray-900 hover:text-blue-600 transition-colors"
                         >
                           {patient.name}
