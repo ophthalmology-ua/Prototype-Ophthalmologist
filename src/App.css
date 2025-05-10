@@ -5,7 +5,6 @@
   text-align: center;
 }
 
-/* Hide horizontal overflow at the root level but allow vertical scrolling */
 html,
 body {
   overflow-x: hidden;
