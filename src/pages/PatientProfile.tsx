@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
-  User, 
   Calendar, 
   Clock, 
   Activity, 
@@ -14,7 +13,7 @@ import {
   Upload,
   ClipboardList
 } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, Legend } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, Legend, TooltipProps as RechartsTooltipProps } from 'recharts';
 import { useLanguage } from '../contexts/LanguageContext';
 
 interface Treatment {
@@ -45,9 +44,18 @@ interface ChartContainerProps {
   isVisualAcuity?: boolean;
 }
 
+interface MedicalHistory {
+  title: string;
+  items: { label: string; value: string }[];
+}
+
+interface CustomTooltipProps extends RechartsTooltipProps<number, string> {
+  isVisualAcuity?: boolean;
+}
+
 // Mock data - replace with actual API calls in production
 const mockPatient = {
-  id: 'P001',
+  id: '32.456.789', // Argentinian DNI sample
   name: 'Juan Pérez',
   age: 65,
   gender: 'Masculino',
@@ -216,6 +224,45 @@ const mockRecentStudies = [
   { id: '2', name: 'Consulta', date: '2024-06-02', type: 'Consulta' }
 ];
 
+const mockMedicalHistory: {
+  ophthalmological: MedicalHistory;
+  personal: MedicalHistory;
+  family: MedicalHistory;
+} = {
+  ophthalmological: {
+    title: 'Antecedentes Oftalmológicos',
+    items: [
+      { label: 'DMAE', value: 'Sí, tipo húmeda (2023)' },
+      { label: 'Glaucoma', value: 'No' },
+      { label: 'Cataratas', value: 'Sí, operado (2020)' },
+      { label: 'Retinopatía Diabética', value: 'No' },
+      { label: 'Miopía', value: 'Sí, -3.50' },
+      { label: 'Hipertensión Ocular', value: 'No' },
+      { label: 'Ojo Seco', value: 'Sí, leve' },
+      { label: 'Desprendimiento de Retina', value: 'No' }
+    ]
+  },
+  personal: {
+    title: 'Antecedentes Personales',
+    items: [
+      { label: 'Hipertensión Arterial', value: 'Sí, controlada' },
+      { label: 'Diabetes', value: 'No' },
+      { label: 'Tabaquismo', value: 'Ex fumador (20 años)' },
+      { label: 'Alergias', value: 'Ninguna conocida' },
+      { label: 'Medicación Actual', value: 'Enalapril 20mg, Atorvastatina 40mg' }
+    ]
+  },
+  family: {
+    title: 'Antecedentes Familiares',
+    items: [
+      { label: 'DMAE en Familia', value: 'Madre (diagnosticada a los 70 años)' },
+      { label: 'Glaucoma', value: 'Hermano mayor' },
+      { label: 'Diabetes', value: 'Padre (tipo 2)' },
+      { label: 'Hipertensión', value: 'Ambos padres' }
+    ]
+  }
+};
+
 const PatientProfile = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -258,6 +305,7 @@ const PatientProfile = () => {
   const CustomTooltip = ({ active, payload, label, isVisualAcuity = false }: any) => {
     if (active && payload && payload.length) {
       const value = payload[0].value;
+      if (value === undefined) return null;
       return (
         <div className="bg-white p-4 shadow-lg rounded-lg border border-gray-100">
           <p className="text-sm text-gray-600 mb-1">{formatDate(label)}</p>
@@ -336,50 +384,54 @@ const PatientProfile = () => {
   );
 
   return (
-    <div className="max-w-7xl mx-auto px-2 sm:px-4">
-      <div className="bg-white rounded-lg shadow p-4 sm:p-6 mb-6">
+    <div className=" mx-auto px-2 sm:px-4 w-full">
+      <div className="bg-white rounded-lg shadow p-4 sm:p-6 mb-6 w-full">
         <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl shadow-lg p-4 sm:p-6 mb-6">
           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 w-full">
-            <div className="flex flex-row items-center gap-4 flex-1 min-w-0">
-              <div className="h-16 w-16 rounded-full bg-white bg-opacity-20 flex items-center justify-center">
-                <User className="w-8 h-8" />
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-col md:flex-row md:items-center gap-2">
+                <h1 className="text-2xl font-bold mr-4">{mockPatient.name}</h1>
+                <span className="text-blue-100 text-lg">DNI: {mockPatient.id} • {mockPatient.age} {t('years')} • {mockPatient.gender}</span>
               </div>
-              <div className="min-w-0">
-                <h1 className="text-2xl font-bold">{mockPatient.name}</h1>
-                <p className="text-blue-100">ID: {mockPatient.id} • {mockPatient.age} {t('years')} • {mockPatient.gender}</p>
-                <p className="text-blue-100 mt-1">Obra social: <span className="font-semibold text-white">{mockPatient.obraSocial}</span></p>
-              </div>
+              <p className="text-blue-100 mt-1">Obra social: <span className="font-semibold text-white">{mockPatient.obraSocial}</span></p>
+              <p className="text-blue-100 mt-1">{t('contactNumber')}: <span className="font-semibold text-white">{mockPatient.contactNumber}</span></p>
+              <p className="text-blue-100 mt-1">{t('email')}: <span className="font-semibold text-white">{mockPatient.email}</span></p>
+              <p className="text-blue-100 mt-1">{t('lastVisit')}: <span className="font-semibold text-white">{mockPatient.lastVisit}</span></p>
             </div>
             <div className="flex flex-col sm:flex-row gap-3 md:items-center md:justify-end mt-4 md:mt-0">
-              <button className="flex-1 min-w-[180px] h-24 flex flex-col items-center justify-center px-6 py-3 bg-white text-[#2563eb] rounded-xl font-bold shadow-lg hover:bg-[#e0e7ff] transition-colors text-lg">
-                <Plus className="w-6 h-6 mb-1" />
-                <span>Nueva cita</span>
+              <button
+                className="flex-1 min-w-[180px] h-24 flex flex-col items-center justify-center px-6 py-3 bg-white text-[#2563eb] rounded-xl font-bold shadow-lg hover:bg-[#e0e7ff] transition-colors text-lg"
+                onClick={() => navigate(`/upload-consultation?patientId=${id}`)}
+              >
+                <ClipboardList className="w-6 h-6 mb-1" />
+                <span>Subir consulta</span>
               </button>
               <button
                 className="flex-1 min-w-[180px] h-24 flex flex-col items-center justify-center px-6 py-3 bg-white text-[#2563eb] rounded-xl font-bold shadow-lg hover:bg-[#e0e7ff] transition-colors text-lg"
                 onClick={() => navigate(`/upload?patientId=${id}`)}
               >
                 <Upload className="w-6 h-6 mb-1" />
-                <span>Subir</span>
+                <span>Subir estudio</span>
+              </button>
+              <button className="flex-1 min-w-[180px] h-24 flex flex-col items-center justify-center px-6 py-3 bg-white text-[#2563eb] rounded-xl font-bold shadow-lg hover:bg-[#e0e7ff] transition-colors text-lg">
+                <Plus className="w-6 h-6 mb-1" />
+                <span>Nueva cita</span>
               </button>
             </div>
           </div>
-          <div className="w-full mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
-              {/* Tarjeta de próximo turno */}
-              <div className="bg-white bg-opacity-10 rounded-lg p-4 flex items-center min-h-[110px]">
-                <Calendar className="w-5 h-5 mr-3" />
-                <div className="min-w-0">
-                  <p className="text-sm text-blue-100 truncate font-semibold">Siguiente turno</p>
-                  {mockAppointments && mockAppointments.length > 0 ? (
-                    <>
-                      <p className="font-medium truncate">{mockAppointments[0].date} {mockAppointments[0].time}</p>
-                      <p className="text-sm text-blue-100 truncate">Tipo: {mockAppointments[0].type}</p>
-                    </>
-                  ) : (
-                    <p className="font-medium truncate">{t('notScheduled')}</p>
-                  )}
-                </div>
+          <div className="w-full mt-3">
+            <div className="bg-white bg-opacity-10 rounded-lg p-4 flex items-center min-h-[110px]">
+              <Calendar className="w-5 h-5 mr-3" />
+              <div className="min-w-0">
+                <p className="text-sm text-blue-100 truncate font-semibold">Siguiente turno</p>
+                {mockAppointments && mockAppointments.length > 0 ? (
+                  <>
+                    <p className="font-medium truncate">{mockAppointments[0].date} {mockAppointments[0].time}</p>
+                    <p className="text-sm text-blue-100 truncate">Tipo: {mockAppointments[0].type}</p>
+                  </>
+                ) : (
+                  <p className="font-medium truncate">{t('notScheduled')}</p>
+                )}
               </div>
             </div>
           </div>
@@ -418,23 +470,43 @@ const PatientProfile = () => {
           <div className="p-6">
             {activeTab === 'overview' && (
               <div className="space-y-6">
-                {/* Patient Details */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold text-gray-900">{t('patientInfo')}</h3>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-sm text-gray-500">{t('contactNumber')}</p>
-                        <p className="font-medium">{mockPatient.contactNumber}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500">{t('email')}</p>
-                        <p className="font-medium">{mockPatient.email}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500">{t('lastVisit')}</p>
-                        <p className="font-medium">{mockPatient.lastVisit}</p>
-                      </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {/* Antecedentes Oftalmológicos */}
+                  <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">{mockMedicalHistory.ophthalmological.title}</h3>
+                    <div className="space-y-4">
+                      {mockMedicalHistory.ophthalmological.items.map((item, index) => (
+                        <div key={index} className="border-b border-gray-100 pb-3 last:border-0">
+                          <p className="text-sm text-gray-500 mb-1">{item.label}</p>
+                          <p className="font-medium text-gray-900">{item.value}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Antecedentes Personales */}
+                  <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">{mockMedicalHistory.personal.title}</h3>
+                    <div className="space-y-4">
+                      {mockMedicalHistory.personal.items.map((item, index) => (
+                        <div key={index} className="border-b border-gray-100 pb-3 last:border-0">
+                          <p className="text-sm text-gray-500 mb-1">{item.label}</p>
+                          <p className="font-medium text-gray-900">{item.value}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Antecedentes Familiares */}
+                  <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">{mockMedicalHistory.family.title}</h3>
+                    <div className="space-y-4">
+                      {mockMedicalHistory.family.items.map((item, index) => (
+                        <div key={index} className="border-b border-gray-100 pb-3 last:border-0">
+                          <p className="text-sm text-gray-500 mb-1">{item.label}</p>
+                          <p className="font-medium text-gray-900">{item.value}</p>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </div>

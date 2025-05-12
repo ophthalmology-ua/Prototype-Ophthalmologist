@@ -4,7 +4,6 @@ import {
   Users, 
   Calendar, 
   ClipboardList,
-  Bell,
   Settings
 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -28,14 +27,6 @@ const MainLayout = () => {
     { name: t('patients'), path: '/patients', icon: Users },
     { name: t('appointments'), path: '/appointments', icon: Calendar }
   ];
-
-  const getPageTitle = () => {
-    if (location.pathname.startsWith('/patientInfo/')) {
-      return t('patientInfo'); // or t('patientInformation') if you prefer
-    }
-    const navItem = navigation.find(item => isActiveRoute(item.path));
-    return navItem ? navItem.name : t('dashboard');
-  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row">
@@ -155,23 +146,8 @@ const MainLayout = () => {
       )}
       {/* Main Content Area */}
       <div className="flex-1 md:ml-64 flex flex-col min-h-screen">
-        {/* Top Navigation Bar (desktop) */}
-        <header className="hidden md:block sticky top-0 z-20 bg-white border-b border-gray-100">
-          <div className="h-16 px-8 flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-gray-800">
-              {getPageTitle()}
-            </h2>
-            <div className="flex items-center space-x-4">
-              <LanguageSwitcher />
-              <button className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors relative">
-                <Bell className="w-5 h-5" />
-                <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
-              </button>
-            </div>
-          </div>
-        </header>
         {/* Page Content */}
-        <main className="flex-1 p-4 sm:p-6 md:p-8 w-full max-w-full">
+        <main className="flex-1 p-2 sm:p-6 w-full max-w-full">
           <Outlet />
         </main>
       </div>

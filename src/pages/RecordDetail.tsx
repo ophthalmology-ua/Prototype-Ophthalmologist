@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { ArrowLeft, FileText } from 'lucide-react';
+import oct_sample from '/oct_sample.png';
 
 // Mock data for demonstration
 const mockRecords = [
@@ -60,8 +61,36 @@ export default function RecordDetail() {
         {record.type === 'study' ? (
           <>
             {record.fileName && record.fileName.match(/\.(png|jpg|jpeg|gif)$/i) && (
-              <div className="mb-6 flex justify-center">
-                <img src={record.fileUrl} alt={record.fileName} className="w-full max-w-3xl h-auto rounded shadow" />
+              <div className="mb-6 flex flex-col items-center justify-center">
+                <img src={oct_sample} alt={record.fileName} className="w-full max-w-3xl h-auto rounded shadow mb-8" />
+                {/* Retina Thickness Map Visualization */}
+                <div className="w-full flex justify-center">
+                  <svg width="320" height="320" viewBox="0 0 320 320">
+                    {/* Background */}
+                    <circle cx="160" cy="160" r="150" fill="#474b57" />
+                    {/* Concentric circles */}
+                    <circle cx="160" cy="160" r="150" fill="#474b57" />
+                    <circle cx="160" cy="160" r="90" fill="none" stroke="#fff" strokeWidth="1.5" />
+                    {/* Center circle */}
+                    <circle cx="160" cy="160" r="25" fill="none" stroke="#fff" strokeWidth="1.5" />
+                    {/* Radial lines: only diagonals */}
+                    <g stroke="#fff" strokeWidth="1.5">
+                      <line x1="50" y1="50" x2="270" y2="270" />
+                      <line x1="270" y1="50" x2="50" y2="270" />
+                    </g>
+                    {/* Improved grid layout for numbers: perfectly centered horizontal row */}
+                    <text x="160" y="55" textAnchor="middle" fill="#fff" fontSize="18" fontWeight="bold">319</text> {/* Top */}
+                    <text x="160" y="105" textAnchor="middle" fill="#fff" fontSize="18" fontWeight="bold">392</text> {/* Top inner */}
+                    <text x="42" y="168" textAnchor="middle" fill="#fff" fontSize="18" fontWeight="bold">436</text> {/* Far left */}
+                    <text x="106" y="168" textAnchor="middle" fill="#fff" fontSize="18" fontWeight="bold">381</text> {/* Left inner */}
+                    <text x="160" y="168" textAnchor="middle" fill="#fff" fontSize="22" fontWeight="bold">416</text> {/* Center */}
+                    <text x="214" y="168" textAnchor="middle" fill="#fff" fontSize="18" fontWeight="bold">350</text> {/* Right inner */}
+                    <text x="278" y="168" textAnchor="middle" fill="#fff" fontSize="18" fontWeight="bold">319</text> {/* Far right */}
+                    <text x="160" y="215" textAnchor="middle" fill="#fff" fontSize="18" fontWeight="bold">365</text> {/* Bottom inner */}
+                    <text x="160" y="265" textAnchor="middle" fill="#fff" fontSize="18" fontWeight="bold">321</text> {/* Bottom */}
+                  </svg>
+                </div>
+                <div className="text-center text-gray-600 mt-2 text-sm font-semibold">1/3/6 mm average thickness, μm</div>
               </div>
             )}
             <p className="mb-4">{t('file') || 'Archivo'}: <span className="font-medium">{record.fileName}</span></p>

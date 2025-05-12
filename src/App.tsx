@@ -11,6 +11,7 @@ import { LanguageProvider } from './contexts/LanguageContext';
 import Login from './pages/Login';
 import DiagnosisDetail from './pages/DiagnosisDetail';
 import RecordDetail from './pages/RecordDetail';
+import UploadConsultation from './pages/UploadConsultation';
 
 function App() {
   return (
@@ -28,6 +29,7 @@ function App() {
             <Route path="reports" element={<Reports />} />
             <Route path="diagnosis/:id" element={<DiagnosisDetail />} />
             <Route path="records/:id" element={<RecordDetail />} />
+            <Route path="upload-consultation" element={<UploadConsultation />} />
           </Route>
         </Routes>
       </Router>
