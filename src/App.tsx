@@ -15,7 +15,7 @@ import RecordDetail from './pages/RecordDetail';
 function App() {
   return (
     <LanguageProvider>
-      <Router basename="/Lab-3-Prototype">
+      <Router basename="/Prototype-Ophthalmologist">
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/" element={<MainLayout />}>
