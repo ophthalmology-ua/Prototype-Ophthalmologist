@@ -78,12 +78,15 @@ export default function RecordDetail() {
                       <line x1="50" y1="50" x2="270" y2="270" />
                       <line x1="270" y1="50" x2="50" y2="270" />
                     </g>
+                    {/* Add a filled circle to cover the intersection lines at the center */}
+                    <circle cx="160" cy="160" r="24" fill="#474b57" />
+                    {/* Center value (drawn after the cover circle) */}
+                    <text x="160" y="168" textAnchor="middle" fill="#fff" fontSize="22" fontWeight="bold">416</text> {/* Center */}
                     {/* Improved grid layout for numbers: perfectly centered horizontal row */}
                     <text x="160" y="55" textAnchor="middle" fill="#fff" fontSize="18" fontWeight="bold">319</text> {/* Top */}
                     <text x="160" y="105" textAnchor="middle" fill="#fff" fontSize="18" fontWeight="bold">392</text> {/* Top inner */}
                     <text x="42" y="168" textAnchor="middle" fill="#fff" fontSize="18" fontWeight="bold">436</text> {/* Far left */}
                     <text x="106" y="168" textAnchor="middle" fill="#fff" fontSize="18" fontWeight="bold">381</text> {/* Left inner */}
-                    <text x="160" y="168" textAnchor="middle" fill="#fff" fontSize="22" fontWeight="bold">416</text> {/* Center */}
                     <text x="214" y="168" textAnchor="middle" fill="#fff" fontSize="18" fontWeight="bold">350</text> {/* Right inner */}
                     <text x="278" y="168" textAnchor="middle" fill="#fff" fontSize="18" fontWeight="bold">319</text> {/* Far right */}
                     <text x="160" y="215" textAnchor="middle" fill="#fff" fontSize="18" fontWeight="bold">365</text> {/* Bottom inner */}
