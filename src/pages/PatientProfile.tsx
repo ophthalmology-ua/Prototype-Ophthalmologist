@@ -13,7 +13,7 @@ import {
   Upload,
   ClipboardList
 } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, Legend, TooltipProps as RechartsTooltipProps } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, Legend } from 'recharts';
 import { useLanguage } from '../contexts/LanguageContext';
 
 interface Treatment {
@@ -47,10 +47,6 @@ interface ChartContainerProps {
 interface MedicalHistory {
   title: string;
   items: { label: string; value: string }[];
-}
-
-interface CustomTooltipProps extends RechartsTooltipProps<number, string> {
-  isVisualAcuity?: boolean;
 }
 
 // Mock data - replace with actual API calls in production
