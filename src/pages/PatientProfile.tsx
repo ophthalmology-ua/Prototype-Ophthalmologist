@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { 
   Calendar, 
   Clock, 
@@ -11,10 +11,13 @@ import {
   Plus,
   TrendingUp,
   Upload,
-  ClipboardList
+  ClipboardList,
+  Info,
+  ChevronDown
 } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, Legend } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, Legend, TooltipProps } from 'recharts';
 import { useLanguage } from '../contexts/LanguageContext';
+import { ValueType, NameType } from 'recharts/types/component/DefaultTooltipContent';
 
 interface Treatment {
   date: string;
@@ -58,6 +61,8 @@ const mockPatient = {
   contactNumber: '+54 9 11 1234-5678',
   email: 'juan.perez@email.com',
   obraSocial: 'OSDE 410',
+  clinicalHistoryNumber: '001', // mock clinical history number
+  affiliateNumber: 'OSDE-12345678', // mock affiliate number
   diagnosis: 'Degeneración macular relacionada con la edad',
   primaryPhysician: 'Dra. María González',
   lastVisit: '2024-03-15',
@@ -259,10 +264,600 @@ const mockMedicalHistory: {
   }
 };
 
+// Mock consultations data
+const mockConsultations = [
+  {
+    id: 'C001',
+    date: '2024-03-15',
+    motivoConsulta: 'Control de DMAE',
+    antecedentesEnfActual: 'Paciente con antecedentes de DMAE húmeda.',
+    antecedentesPatologicos: 'Hipertensión arterial',
+    medicacionHabitual: 'Enalapril',
+    alergias: 'Ninguna',
+    antecedentesQuirurgicos: 'Cirugía de cataratas',
+    antecedentesHeredo: 'Madre con DMAE',
+    antecedentesOftalmo: 'Miopía',
+    datosAccesorios: 'N/A',
+    examenOftalmo: {
+      agudezaVisualLejos: { od: '20/40', oi: '20/30' },
+      agudezaVisualCerca: { od: 'J2', oi: 'J1' },
+      presionIntraocular: { od: '15', oi: '16' },
+      fondoOjos: 'Sin alteraciones',
+      otrosEstudios: 'OCT normal',
+    },
+    notasExtra: 'Sin novedades',
+    diagnosticoPresuntivo: 'DMAE húmeda',
+    planEstudios: 'OCT en 3 meses',
+    planTerapeutico: 'Aflibercept 2mg',
+    proximoControl: '2024-06-15',
+  },
+  {
+    id: 'C002',
+    date: '2023-12-10',
+    motivoConsulta: 'Chequeo general',
+    antecedentesEnfActual: 'Sin antecedentes relevantes.',
+    antecedentesPatologicos: 'Ninguno',
+    medicacionHabitual: 'Ninguna',
+    alergias: 'Penicilina',
+    antecedentesQuirurgicos: 'Ninguno',
+    antecedentesHeredo: 'Padre con diabetes',
+    antecedentesOftalmo: 'Hipertensión ocular',
+    datosAccesorios: 'N/A',
+    examenOftalmo: {
+      agudezaVisualLejos: { od: '20/25', oi: '20/25' },
+      agudezaVisualCerca: { od: 'J1', oi: 'J1' },
+      presionIntraocular: { od: '14', oi: '15' },
+      fondoOjos: 'Leve alteración vascular',
+      otrosEstudios: 'Campimetría normal',
+    },
+    notasExtra: 'Control anual',
+    diagnosticoPresuntivo: 'Normal',
+    planEstudios: 'Control en 1 año',
+    planTerapeutico: 'Ninguno',
+    proximoControl: '2024-12-10',
+  },
+];
+
+// Type for a consultation object
+type ConsultationType = {
+  id: string;
+  date: string;
+  motivoConsulta: string;
+  antecedentesEnfActual: string;
+  antecedentesPatologicos: string;
+  medicacionHabitual: string;
+  alergias: string;
+  antecedentesQuirurgicos: string;
+  antecedentesHeredo: string;
+  antecedentesOftalmo: string;
+  datosAccesorios: string;
+  examenOftalmo: {
+    agudezaVisualLejos: { od: string; oi: string };
+    agudezaVisualCerca: { od: string; oi: string };
+    presionIntraocular: { od: string; oi: string };
+    fondoOjos: string;
+    otrosEstudios: string;
+  };
+  notasExtra: string;
+  diagnosticoPresuntivo: string;
+  planEstudios: string;
+  planTerapeutico: string;
+  proximoControl: string;
+};
+
+function SubirTab() {
+  // Patient data
+  const [patientData, setPatientData] = useState({
+    name: '',
+    dni: '',
+    age: '',
+    obraSocial: '',
+    affiliateNumber: '',
+  });
+  // Motivo de consulta y antecedentes
+  const [motivoConsulta, setMotivoConsulta] = useState('');
+  const [antecedentesEnfActual, setAntecedentesEnfActual] = useState('');
+  const [primeraVezOpen, setPrimeraVezOpen] = useState(false);
+  const [antecedentesPatologicos, setAntecedentesPatologicos] = useState('');
+  const [medicacionHabitual, setMedicacionHabitual] = useState('');
+  const [alergias, setAlergias] = useState('');
+  const [antecedentesQuirurgicos, setAntecedentesQuirurgicos] = useState('');
+  const [antecedentesHeredo, setAntecedentesHeredo] = useState('');
+  const [antecedentesOftalmo, setAntecedentesOftalmo] = useState('');
+  const [datosAccesorios, setDatosAccesorios] = useState('');
+  // Estudios
+  const [studies, setStudies] = useState<{ id: number; file: File | null }[]>([]);
+  // Notas extra, diagnóstico, plan, próximo control
+  const [notasExtra, setNotasExtra] = useState('');
+  const [diagnosticoPresuntivo, setDiagnosticoPresuntivo] = useState('');
+  const [planEstudios, setPlanEstudios] = useState('');
+  const [planTerapeutico, setPlanTerapeutico] = useState('');
+  const [planTerapeuticoNoFarm, setPlanTerapeuticoNoFarm] = useState('');
+  const [planViaFarm, setPlanViaFarm] = useState('');
+  const [planFarmaco, setPlanFarmaco] = useState('');
+  const [planCantidad, setPlanCantidad] = useState('');
+  const [planUnidad, setPlanUnidad] = useState('');
+  const [planFarmacoOtro, setPlanFarmacoOtro] = useState('');
+  const [proximoControl, setProximoControl] = useState('');
+  const [isStudyModalOpen, setIsStudyModalOpen] = useState(false);
+  // UploadStudy modal state
+  const [detectionMode, setDetectionMode] = useState<'auto' | 'manual'>('auto');
+  const [octFields, setOctFields] = useState({
+    centralThickness: '',
+    retinalVolume: '',
+    averageThickness: ''
+  });
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  // Collapsible states for ophthalmologic exam
+  const [isToleradaOpen, setIsToleradaOpen] = useState(false);
+  const [isPrescripcionOpen, setIsPrescripcionOpen] = useState(false);
+  const [isMasDetalleVisionOpen, setIsMasDetalleVisionOpen] = useState(false);
+  const [isPosicionOcularOpen, setIsPosicionOcularOpen] = useState(false);
+  const [isBiomicroscopiaOpen, setIsBiomicroscopiaOpen] = useState(false);
+  // Collapsible state for patient data
+  const [isDatosPacienteOpen, setIsDatosPacienteOpen] = useState(false);
+
+  const handleStudyFileChange = (idx: number, file: File | null) => {
+    setStudies(prev => prev.map((s, i) => i === idx ? { ...s, file } : s));
+  };
+  const handleRemoveStudy = (idx: number) => {
+    setStudies(prev => prev.filter((_, i) => i !== idx));
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setSelectedFile(e.target.files[0]);
+    }
+  };
+  const handleStudyModalSave = () => {
+    // Add study to list if a file is selected
+    if (selectedFile) {
+      setStudies(prev => [...prev, { id: Date.now(), file: selectedFile }]);
+    }
+    setIsStudyModalOpen(false);
+    // Reset modal state if needed
+    setDetectionMode('auto');
+    setOctFields({ centralThickness: '', retinalVolume: '', averageThickness: '' });
+    setSelectedFile(null);
+  };
+
+  return (
+    <form className="space-y-8">
+      {/* Datos del Paciente (collapsible) */}
+      <div className="bg-white rounded-xl p-6 border">
+        <button type="button" className="flex items-center font-bold text-lg mb-4" onClick={() => setIsDatosPacienteOpen(v => !v)}>
+          {isDatosPacienteOpen ? <ChevronDown className="w-5 h-5 mr-2" /> : <ChevronRight className="w-5 h-5 mr-2" />}Datos del Paciente
+        </button>
+        {isDatosPacienteOpen && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input className="border rounded px-3 py-2" placeholder="Nombre completo" value={patientData.name} onChange={e => setPatientData(d => ({ ...d, name: e.target.value }))} />
+            <input className="border rounded px-3 py-2" placeholder="DNI" value={patientData.dni} onChange={e => setPatientData(d => ({ ...d, dni: e.target.value }))} />
+            <input className="border rounded px-3 py-2" placeholder="Edad" value={patientData.age} onChange={e => setPatientData(d => ({ ...d, age: e.target.value }))} />
+            <input className="border rounded px-3 py-2" placeholder="Obra Social / Nº de afiliado" value={patientData.obraSocial} onChange={e => setPatientData(d => ({ ...d, obraSocial: e.target.value }))} />
+          </div>
+        )}
+      </div>
+      {/* Motivo de Consulta */}
+      <div className="bg-white rounded-xl p-6 border">
+        <h2 className="font-bold text-lg mb-4">Motivo de Consulta</h2>
+        <textarea className="w-full border rounded px-3 py-2 mb-2" placeholder="Describa el motivo de consulta" value={motivoConsulta} onChange={e => setMotivoConsulta(e.target.value)} />
+      </div>
+      {/* Antecedentes de la Enfermedad Actual */}
+      <div className="bg-white rounded-xl p-6 border">
+        <h2 className="font-bold text-lg mb-4">Antecedentes de la Enfermedad Actual</h2>
+        <textarea className="w-full border rounded px-3 py-2 mb-2" placeholder="Describa los antecedentes de la enfermedad actual" value={antecedentesEnfActual} onChange={e => setAntecedentesEnfActual(e.target.value)} />
+      </div>
+      {/* Antecedentes (collapsible) */}
+      <div className="bg-white rounded-xl p-6 border">
+        <button type="button" className="flex items-center font-bold text-lg mb-4" onClick={() => setPrimeraVezOpen(v => !v)}>
+          {primeraVezOpen ? <ChevronDown className="w-5 h-5 mr-2" /> : <ChevronRight className="w-5 h-5 mr-2" />}Antecedentes
+        </button>
+        {primeraVezOpen && (
+          <div className="space-y-2">
+            <textarea className="w-full border rounded px-3 py-2" placeholder="Antecedentes patológicos personales" value={antecedentesPatologicos} onChange={e => setAntecedentesPatologicos(e.target.value)} />
+            <textarea className="w-full border rounded px-3 py-2" placeholder="Medicación habitual" value={medicacionHabitual} onChange={e => setMedicacionHabitual(e.target.value)} />
+            <textarea className="w-full border rounded px-3 py-2" placeholder="Alergias" value={alergias} onChange={e => setAlergias(e.target.value)} />
+            <textarea className="w-full border rounded px-3 py-2" placeholder="Antecedentes quirúrgicos" value={antecedentesQuirurgicos} onChange={e => setAntecedentesQuirurgicos(e.target.value)} />
+            <textarea className="w-full border rounded px-3 py-2" placeholder="Antecedentes Heredo familiares" value={antecedentesHeredo} onChange={e => setAntecedentesHeredo(e.target.value)} />
+            <textarea className="w-full border rounded px-3 py-2" placeholder="Antecedentes oftalmológicos" value={antecedentesOftalmo} onChange={e => setAntecedentesOftalmo(e.target.value)} />
+            <textarea className="w-full border rounded px-3 py-2" placeholder="Datos Accesorios Relevantes" value={datosAccesorios} onChange={e => setDatosAccesorios(e.target.value)} />
+          </div>
+        )}
+      </div>
+      {/* Examen Oftalmológico (expanded, with collapsibles) */}
+      <div className="bg-white rounded-xl p-6 border">
+        <h2 className="font-bold text-lg mb-4">Examen Oftalmológico</h2>
+        {/* Agudeza Visual */}
+        <h3 className="font-semibold mb-2">1. Agudeza Visual - Lejos</h3>
+        <div className="mb-2">a) Sin Corrección</div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2">
+          <input className="border rounded px-3 py-2" placeholder="OD" />
+          <input className="border rounded px-3 py-2" placeholder="OI" />
+        </div>
+        <div className="mb-2">b) Con estenopeico</div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2">
+          <input className="border rounded px-3 py-2" placeholder="OD" />
+          <input className="border rounded px-3 py-2" placeholder="OI" />
+        </div>
+        <div className="mb-2">c) Con la Mejor Corrección</div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-4">
+          <input className="border rounded px-3 py-2" placeholder="OD" />
+          <input className="border rounded px-3 py-2" placeholder="OI" />
+        </div>
+        <h3 className="font-semibold mb-2">Agudeza Visual - Cerca</h3>
+        <div className="mb-2">Con corrección</div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-4">
+          <input className="border rounded px-3 py-2" placeholder="OD" />
+          <input className="border rounded px-3 py-2" placeholder="OI" />
+        </div>
+        <div className="mb-2">Sin corrección</div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-4">
+          <input className="border rounded px-3 py-2" placeholder="OD" />
+          <input className="border rounded px-3 py-2" placeholder="OI" />
+        </div>
+        {/* Refracción */}
+        <h3 className="font-semibold mb-2">2. Refracción</h3>
+        <div className="mb-2">A. Lejos</div>
+        <div className="mb-2">a) Mejor Corrección</div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2">
+          <input className="border rounded px-3 py-2" placeholder="OD: Esférico +/- 00.00D; Cilíndrico +/- 00.00D x 000°" />
+          <input className="border rounded px-3 py-2" placeholder="OI: Esférico +/- 00.00D; Cilíndrico +/- 00.00D x 000°" />
+        </div>
+        {/* Corrección Mejor Tolerada (collapsible) */}
+        <button type="button" className="flex items-center font-semibold mb-2" onClick={() => setIsToleradaOpen(v => !v)}>
+          {isToleradaOpen ? <ChevronDown className="w-4 h-4 mr-1" /> : <ChevronRight className="w-4 h-4 mr-1" />}b) Corrección Mejor Tolerada
+        </button>
+        {isToleradaOpen && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2">
+            <input className="border rounded px-3 py-2" placeholder="OD..." />
+            <input className="border rounded px-3 py-2" placeholder="OI..." />
+          </div>
+        )}
+        {/* Corrección para Prescripción (collapsible) */}
+        <button type="button" className="flex items-center font-semibold mb-2" onClick={() => setIsPrescripcionOpen(v => !v)}>
+          {isPrescripcionOpen ? <ChevronDown className="w-4 h-4 mr-1" /> : <ChevronRight className="w-4 h-4 mr-1" />}c) Corrección para Prescripción
+        </button>
+        {isPrescripcionOpen && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-4">
+            <input className="border rounded px-3 py-2" placeholder="OD..." />
+            <input className="border rounded px-3 py-2" placeholder="OI..." />
+          </div>
+        )}
+        <div className="mb-2">B. Cerca</div>
+        <input className="border rounded px-3 py-2 mb-2" placeholder="Adición (Esférico +0.00D)" />
+        <div className="mb-2">C. Intermedia</div>
+        <div className="flex items-center mb-2">
+          <input type="checkbox" className="mr-2" id="intermediaAuto" />
+          <label htmlFor="intermediaAuto">Calcular automáticamente</label>
+        </div>
+        <input className="border rounded px-3 py-2 mb-2" placeholder="Adición intermedia (Esférico +0.00D)" />
+        {/* Más detalle en visión (collapsible) */}
+        <button type="button" className="flex items-center font-semibold mb-2" onClick={() => setIsMasDetalleVisionOpen(v => !v)}>
+          {isMasDetalleVisionOpen ? <ChevronDown className="w-4 h-4 mr-1" /> : <ChevronRight className="w-4 h-4 mr-1" />}3. Más detalle en visión
+        </button>
+        {isMasDetalleVisionOpen && (
+          <div className="mb-4">
+            <div className="mb-2">Visión de Colores</div>
+            <select className="border rounded px-3 py-2 mb-2">
+              <option>Seleccionar</option>
+              <option>Normal</option>
+              <option>Alterada</option>
+            </select>
+            <textarea className="w-full border rounded px-3 py-2 mb-2" placeholder="Notas sobre visión de colores" />
+            <div className="mb-2">Visión 3D</div>
+            <select className="border rounded px-3 py-2 mb-2">
+              <option>Seleccionar</option>
+              <option>Normal</option>
+              <option>Alterada</option>
+            </select>
+            <textarea className="w-full border rounded px-3 py-2 mb-4" placeholder="Notas sobre visión 3D" />
+          </div>
+        )}
+        {/* Posición Ocular (collapsible) */}
+        <button type="button" className="flex items-center font-semibold mb-2" onClick={() => setIsPosicionOcularOpen(v => !v)}>
+          {isPosicionOcularOpen ? <ChevronDown className="w-4 h-4 mr-1" /> : <ChevronRight className="w-4 h-4 mr-1" />}4. Posición Ocular
+        </button>
+        {isPosicionOcularOpen && (
+          <div className="mb-4">
+            <div className="flex items-center mb-2">
+              <input type="checkbox" className="mr-2" id="ortotropia" />
+              <label htmlFor="ortotropia">Ortotropia</label>
+            </div>
+            <textarea className="w-full border rounded px-3 py-2 mb-4" placeholder="Más detalle en posición ocular" />
+          </div>
+        )}
+        {/* Biomicroscopía (collapsible) */}
+        <button type="button" className="flex items-center font-semibold mb-2" onClick={() => setIsBiomicroscopiaOpen(v => !v)}>
+          {isBiomicroscopiaOpen ? <ChevronDown className="w-4 h-4 mr-1" /> : <ChevronRight className="w-4 h-4 mr-1" />}5. Biomicroscopía
+        </button>
+        {isBiomicroscopiaOpen && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-2">
+            <textarea className="border rounded px-3 py-2" placeholder="OD" />
+            <textarea className="border rounded px-3 py-2" placeholder="OI" />
+            <textarea className="border rounded px-3 py-2" placeholder="AO" />
+          </div>
+        )}
+        {/* Presión Intraocular */}
+        <div className="font-semibold mb-2">6. Presión Intraocular</div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-4">
+          <input className="border rounded px-3 py-2" placeholder="OD (mmHg)" />
+          <input className="border rounded px-3 py-2" placeholder="OI (mmHg)" />
+        </div>
+        {/* Fondo de ojos */}
+        <div className="font-semibold mb-2">7. Fondo de ojos</div>
+        <div className="flex items-center mb-2">
+          <input type="checkbox" className="mr-2" id="fondoOjos" />
+          <label htmlFor="fondoOjos">OBI</label>
+        </div>
+        <textarea className="w-full border rounded px-3 py-2 mb-4" placeholder="Descripción del fondo de ojos" />
+        {/* Otros estudios */}
+        <div className="font-semibold mb-2">8. Otros estudios</div>
+        <textarea className="w-full border rounded px-3 py-2 mb-2" placeholder="Describa otros estudios realizados" />
+      </div>
+      {/* Estudios (add study container with + button) */}
+      <div className="bg-white rounded-xl p-6 border">
+        <h2 className="font-bold text-lg mb-4">Subida de estudios</h2>
+        {/* Only show study file inputs if there are studies */}
+        {studies.length > 0 && studies.map((study, idx) => (
+          <div key={study.id} className="flex items-center gap-4 mb-2">
+            <input type="file" onChange={e => handleStudyFileChange(idx, e.target.files?.[0] || null)} />
+            <button type="button" className="text-red-500" onClick={() => handleRemoveStudy(idx)}>Eliminar</button>
+          </div>
+        ))}
+        {/* Only show the + Agregar estudio button if there are no studies */}
+        {studies.length === 0 && (
+          <button type="button" className="mt-2 px-4 py-2 bg-blue-100 text-blue-700 rounded hover:bg-blue-200" onClick={() => setIsStudyModalOpen(true)}>+ Agregar estudio</button>
+        )}
+        {/* Study Upload Modal */}
+        {isStudyModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+            <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-lg relative">
+              <button
+                className="absolute top-2 right-2 text-gray-400 hover:text-red-500 text-2xl font-bold focus:outline-none"
+                onClick={() => setIsStudyModalOpen(false)}
+                aria-label="Cerrar"
+              >
+                ×
+              </button>
+              <h1 className="text-2xl font-bold text-gray-800 mb-6">Subir Estudio</h1>
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8">
+                {/* Detection mode toggle */}
+                <div className="flex gap-4 mb-6">
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="detectionMode"
+                      value="auto"
+                      checked={detectionMode === 'auto'}
+                      onChange={() => setDetectionMode('auto')}
+                    />
+                    Detección automática
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="detectionMode"
+                      value="manual"
+                      checked={detectionMode === 'manual'}
+                      onChange={() => setDetectionMode('manual')}
+                    />
+                    Ingreso manual
+                  </label>
+                </div>
+                {/* File upload always shown */}
+                <div className="text-center mb-6">
+                  <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                  <div className="mt-4">
+                    <h3 className="text-lg font-medium text-gray-900">Arrastre y suelte archivos aquí</h3>
+                    <p className="mt-1 text-sm text-gray-500">o haga clic para seleccionar</p>
+                  </div>
+                  <input
+                    type="file"
+                    onChange={handleFileChange}
+                    className="hidden"
+                    id="file-upload-modal"
+                  />
+                  <label
+                    htmlFor="file-upload-modal"
+                    className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer"
+                  >
+                    Seleccionar archivo
+                  </label>
+                  {selectedFile && <div className="mt-2 text-sm text-gray-700">Archivo seleccionado: {selectedFile.name}</div>}
+                </div>
+                {/* Manual OCT fields */}
+                {detectionMode === 'manual' && (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Espesor macular central (μm)</label>
+                      <input
+                        type="number"
+                        value={octFields.centralThickness}
+                        onChange={e => setOctFields(f => ({ ...f, centralThickness: e.target.value }))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Ej: 285"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Volumen retiniano (mm³)</label>
+                      <input
+                        type="number"
+                        value={octFields.retinalVolume}
+                        onChange={e => setOctFields(f => ({ ...f, retinalVolume: e.target.value }))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Ej: 8.7"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Espesor medio (μm)</label>
+                      <input
+                        type="number"
+                        value={octFields.averageThickness}
+                        onChange={e => setOctFields(f => ({ ...f, averageThickness: e.target.value }))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Ej: 310"
+                      />
+                    </div>
+                  </div>
+                )}
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    onClick={handleStudyModalSave}
+                  >
+                    Guardar estudio
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+      {/* Notas extra */}
+      <div className="bg-white rounded-xl p-6 border">
+        <h2 className="font-bold text-lg mb-4">Notas extra</h2>
+        <textarea className="w-full border rounded px-3 py-2 mb-2" placeholder="Notas extra" value={notasExtra} onChange={e => setNotasExtra(e.target.value)} />
+      </div>
+      {/* Diagnóstico presuntivo */}
+      <div className="bg-white rounded-xl p-6 border">
+        <h2 className="font-bold text-lg mb-4">Diagnóstico presuntivo</h2>
+        <input className="w-full border rounded px-3 py-2 mb-2" placeholder="Diagnóstico presuntivo" value={diagnosticoPresuntivo} onChange={e => setDiagnosticoPresuntivo(e.target.value)} />
+      </div>
+      {/* Plan de estudios */}
+      <div className="bg-white rounded-xl p-6 border">
+        <h2 className="font-bold text-lg mb-4">Plan de estudios</h2>
+        <input className="w-full border rounded px-3 py-2 mb-2" placeholder="Plan de estudios" value={planEstudios} onChange={e => setPlanEstudios(e.target.value)} />
+      </div>
+      {/* Plan terapéutico (dynamic dropdowns) */}
+      <div className="bg-white rounded-xl p-6 border">
+        <h2 className="font-bold text-lg mb-4">Plan terapéutico</h2>
+        <select
+          className="w-full border rounded px-3 py-2 mb-2"
+          value={planTerapeutico}
+          onChange={e => setPlanTerapeutico(e.target.value)}
+        >
+          <option value="">Seleccione tipo de plan</option>
+          <option value="farmacologico">Farmacológico</option>
+          <option value="no_farmacologico">No farmacológico</option>
+        </select>
+        {/* No farmacológico: show text field */}
+        {planTerapeutico === 'no_farmacologico' && (
+          <input
+            className="w-full border rounded px-3 py-2 mb-2"
+            placeholder="Describa el plan no farmacológico"
+            value={planTerapeuticoNoFarm || ''}
+            onChange={e => setPlanTerapeuticoNoFarm(e.target.value)}
+          />
+        )}
+        {/* Farmacológico: show route, drug, amount, units */}
+        {planTerapeutico === 'farmacologico' && (
+          <>
+            <select
+              className="w-full border rounded px-3 py-2 mb-2"
+              value={planViaFarm || ''}
+              onChange={e => setPlanViaFarm(e.target.value)}
+            >
+              <option value="">Seleccione vía de administración</option>
+              <option value="inyeccion">Inyección</option>
+              <option value="oral">Vía oral</option>
+              <option value="otro">Otro</option>
+            </select>
+            {/* Drug and amount for each route */}
+            {planViaFarm === 'inyeccion' && (
+              <div className="flex flex-col md:flex-row gap-2 mb-2">
+                <select
+                  className="flex-1 border rounded px-3 py-2"
+                  value={planFarmaco || ''}
+                  onChange={e => setPlanFarmaco(e.target.value)}
+                >
+                  <option value="">Seleccione fármaco</option>
+                  <option value="aflibercept">Aflibercept</option>
+                  <option value="ranibizumab">Ranibizumab</option>
+                  <option value="bevacizumab">Bevacizumab</option>
+                  <option value="otro">Otro</option>
+                </select>
+                <input
+                  className="w-24 border rounded px-3 py-2"
+                  type="number"
+                  min="0"
+                  placeholder="Cantidad"
+                  value={planCantidad || ''}
+                  onChange={e => setPlanCantidad(e.target.value)}
+                />
+                <select
+                  className="w-32 border rounded px-3 py-2"
+                  value={planUnidad || ''}
+                  onChange={e => setPlanUnidad(e.target.value)}
+                >
+                  <option value="">Unidad</option>
+                  <option value="mg">mg</option>
+                  <option value="ml">ml</option>
+                  <option value="dosis">dosis</option>
+                </select>
+              </div>
+            )}
+            {planViaFarm === 'oral' && (
+              <div className="flex flex-col md:flex-row gap-2 mb-2">
+                <select
+                  className="flex-1 border rounded px-3 py-2"
+                  value={planFarmaco || ''}
+                  onChange={e => setPlanFarmaco(e.target.value)}
+                >
+                  <option value="">Seleccione fármaco</option>
+                  <option value="prednisona">Prednisona</option>
+                  <option value="metformina">Metformina</option>
+                  <option value="otro">Otro</option>
+                </select>
+                <input
+                  className="w-24 border rounded px-3 py-2"
+                  type="number"
+                  min="0"
+                  placeholder="Cantidad"
+                  value={planCantidad || ''}
+                  onChange={e => setPlanCantidad(e.target.value)}
+                />
+                <select
+                  className="w-32 border rounded px-3 py-2"
+                  value={planUnidad || ''}
+                  onChange={e => setPlanUnidad(e.target.value)}
+                >
+                  <option value="">Unidad</option>
+                  <option value="mg">mg</option>
+                  <option value="comprimidos">comprimidos</option>
+                  <option value="dosis">dosis</option>
+                </select>
+              </div>
+            )}
+            {planViaFarm === 'otro' && (
+              <input
+                className="w-full border rounded px-3 py-2 mb-2"
+                placeholder="Describa la vía y el fármaco"
+                value={planFarmacoOtro || ''}
+                onChange={e => setPlanFarmacoOtro(e.target.value)}
+              />
+            )}
+          </>
+        )}
+      </div>
+      {/* Próximo control */}
+      <div className="bg-white rounded-xl p-6 border">
+        <h2 className="font-bold text-lg mb-4">Próximo control</h2>
+        <input className="w-full border rounded px-3 py-2 mb-2" placeholder="Próximo control (fecha)" value={proximoControl} onChange={e => setProximoControl(e.target.value)} />
+      </div>
+      {/* Save Button */}
+      <div className="flex justify-end">
+        <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+          Guardar consulta
+        </button>
+      </div>
+    </form>
+  );
+}
+
 const PatientProfile = () => {
-  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState('subir');
   const { t, language } = useLanguage();
   const [selectedDiagnosis, setSelectedDiagnosis] = useState('dmae');
   const [pendingActions, setPendingActions] = useState([
@@ -272,6 +867,7 @@ const PatientProfile = () => {
   ]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newPending, setNewPending] = useState('');
+  const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
 
   const handleAddPending = () => {
     setIsModalOpen(true);
@@ -298,28 +894,11 @@ const PatientProfile = () => {
     });
   };
 
-  const CustomTooltip = ({ active, payload, label, isVisualAcuity = false }: any) => {
-    if (active && payload && payload.length) {
-      const value = payload[0].value;
-      if (value === undefined) return null;
-      return (
-        <div className="bg-white p-4 shadow-lg rounded-lg border border-gray-100">
-          <p className="text-sm text-gray-600 mb-1">{formatDate(label)}</p>
-          <p className="text-sm font-medium text-gray-900">
-            {isVisualAcuity ? (
-              <>
-                {(value * 100).toFixed(0)}% ({t('snellen')}{Math.round(20/value)})
-              </>
-            ) : (
-              <>
-                {value} {t('microns')}
-              </>
-            )}
-          </p>
-        </div>
-      );
-    }
-    return null;
+  // Helper to format dates as dd/mm/yyyy
+  const formatDateDMY = (dateStr: string) => {
+    if (!dateStr) return '';
+    const [year, month, day] = dateStr.split('-');
+    return `${day}/${month}/${year}`;
   };
 
   const getStatusColor = (status: string): string => {
@@ -379,6 +958,32 @@ const PatientProfile = () => {
     </div>
   );
 
+  // Move CustomTooltip here so it can access t and formatDate
+  const CustomTooltip = ({ active, payload, label, isVisualAcuity = false }: TooltipProps<ValueType, NameType> & { isVisualAcuity?: boolean }) => {
+    if (active && payload && payload.length) {
+      // Find the first payload with a numeric value
+      const value = typeof payload[0].value === 'number' ? payload[0].value : undefined;
+      if (value === undefined) return null;
+      return (
+        <div className="bg-white p-4 shadow-lg rounded-lg border border-gray-100">
+          <p className="text-sm text-gray-600 mb-1">{formatDate(label ? String(label) : '')}</p>
+          <p className="text-sm font-medium text-gray-900">
+            {isVisualAcuity ? (
+              <>
+                {(value * 100).toFixed(0)}% ({t('snellen')}{Math.round(20/value)})
+              </>
+            ) : (
+              <>
+                {value} {t('microns')}
+              </>
+            )}
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
     <div className=" mx-auto px-2 sm:px-4 w-full">
       <div className="bg-white rounded-lg shadow p-4 sm:p-6 mb-6 w-full">
@@ -386,49 +991,52 @@ const PatientProfile = () => {
           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 w-full">
             <div className="min-w-0 flex-1">
               <div className="flex flex-col md:flex-row md:items-center gap-2">
-                <h1 className="text-2xl font-bold mr-4">{mockPatient.name}</h1>
-                <span className="text-blue-100 text-lg">DNI: {mockPatient.id} • {mockPatient.age} {t('years')} • {mockPatient.gender}</span>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h1 className="text-2xl font-bold mr-2">{mockPatient.name}</h1>
+                    <span className="bg-white/20 text-white font-semibold px-3 py-1 rounded-full text-base">
+                      N° HC: {mockPatient.clinicalHistoryNumber}
+                    </span>
+                    <button
+                      type="button"
+                      aria-label={t('patientInfo')}
+                      className="text-blue-100 hover:text-white focus:outline-none"
+                      onClick={() => setIsInfoModalOpen(v => !v)}
+                    >
+                      <Info className="w-6 h-6" />
+                    </button>
+                  </div>
+                  {isInfoModalOpen && (
+                    <div className="mt-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg p-4 w-full max-w-4xl">
+                      <h2 className="text-lg font-bold mb-2">{t('patientInfo')}</h2>
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-x-8 gap-y-2">
+                        <div className="space-y-1">
+                          <div><span className="font-semibold">DNI:</span> {mockPatient.id}</div>
+                          <div><span className="font-semibold">{t('age')}:</span> {mockPatient.age} {t('years')}</div>
+                        </div>
+                        <div className="space-y-1">
+                          <div><span className="font-semibold">{t('gender')}:</span> {mockPatient.gender}</div>
+                          <div><span className="font-semibold">Obra social:</span> {mockPatient.obraSocial}</div>
+                        </div>
+                        <div className="space-y-1">
+                          <div><span className="font-semibold">N° Afiliado:</span> {mockPatient.affiliateNumber}</div>
+                          <div><span className="font-semibold">{t('contactNumber')}:</span> {mockPatient.contactNumber}</div>
+                        </div>
+                        <div className="space-y-1">
+                          <div><span className="font-semibold">{t('email')}:</span> {mockPatient.email}</div>
+                          <div><span className="font-semibold">{t('lastVisit')}:</span> {formatDateDMY(mockPatient.lastVisit)}</div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
-              <p className="text-blue-100 mt-1">Obra social: <span className="font-semibold text-white">{mockPatient.obraSocial}</span></p>
-              <p className="text-blue-100 mt-1">{t('contactNumber')}: <span className="font-semibold text-white">{mockPatient.contactNumber}</span></p>
-              <p className="text-blue-100 mt-1">{t('email')}: <span className="font-semibold text-white">{mockPatient.email}</span></p>
-              <p className="text-blue-100 mt-1">{t('lastVisit')}: <span className="font-semibold text-white">{mockPatient.lastVisit}</span></p>
             </div>
             <div className="flex flex-col sm:flex-row gap-3 md:items-center md:justify-end mt-4 md:mt-0">
-              <button
-                className="flex-1 min-w-[180px] h-24 flex flex-col items-center justify-center px-6 py-3 bg-white text-[#2563eb] rounded-xl font-bold shadow-lg hover:bg-[#e0e7ff] transition-colors text-lg"
-                onClick={() => navigate(`/upload-consultation?patientId=${id}`)}
-              >
-                <ClipboardList className="w-6 h-6 mb-1" />
-                <span>Subir consulta</span>
-              </button>
-              <button
-                className="flex-1 min-w-[180px] h-24 flex flex-col items-center justify-center px-6 py-3 bg-white text-[#2563eb] rounded-xl font-bold shadow-lg hover:bg-[#e0e7ff] transition-colors text-lg"
-                onClick={() => navigate(`/upload?patientId=${id}`)}
-              >
-                <Upload className="w-6 h-6 mb-1" />
-                <span>Subir estudio</span>
-              </button>
               <button className="flex-1 min-w-[180px] h-24 flex flex-col items-center justify-center px-6 py-3 bg-white text-[#2563eb] rounded-xl font-bold shadow-lg hover:bg-[#e0e7ff] transition-colors text-lg">
                 <Plus className="w-6 h-6 mb-1" />
                 <span>Nueva cita</span>
               </button>
-            </div>
-          </div>
-          <div className="w-full mt-3">
-            <div className="bg-white bg-opacity-10 rounded-lg p-4 flex items-center min-h-[110px]">
-              <Calendar className="w-5 h-5 mr-3" />
-              <div className="min-w-0">
-                <p className="text-sm text-blue-100 truncate font-semibold">Siguiente turno</p>
-                {mockAppointments && mockAppointments.length > 0 ? (
-                  <>
-                    <p className="font-medium truncate">{mockAppointments[0].date} {mockAppointments[0].time}</p>
-                    <p className="text-sm text-blue-100 truncate">Tipo: {mockAppointments[0].type}</p>
-                  </>
-                ) : (
-                  <p className="font-medium truncate">{t('notScheduled')}</p>
-                )}
-              </div>
             </div>
           </div>
         </div>
@@ -436,10 +1044,11 @@ const PatientProfile = () => {
           <div className="border-b border-gray-100">
             <nav className="flex space-x-8 px-2 sm:px-6 min-w-max" aria-label="Tabs">
               {[
+                { id: 'subir', label: 'Subir', icon: ClipboardList },
                 { id: 'overview', label: 'Resumen', icon: Eye },
+                { id: 'consultations', label: 'Consultas', icon: FileText },
                 { id: 'diagnosis', label: 'Diagnósticos', icon: Activity },
                 { id: 'progression', label: 'Seguimiento', icon: TrendingUp },
-                { id: 'history', label: 'Historial', icon: FileText },
                 { id: 'appointments', label: 'Citas', icon: Calendar },
                 { id: 'studies', label: 'Estudios', icon: FileText },
                 { id: 'pending', label: 'Pendiente', icon: AlertCircle }
@@ -506,6 +1115,15 @@ const PatientProfile = () => {
                     </div>
                   </div>
                 </div>
+              </div>
+            )}
+
+            {activeTab === 'consultations' && (
+              <div className="space-y-4">
+                <h2 className="text-xl font-bold mb-4">Consultas previas</h2>
+                {mockConsultations.map((c, idx) => (
+                  <ConsultationAccordion key={c.id} consultation={c} defaultOpen={idx === 0} />
+                ))}
               </div>
             )}
 
@@ -748,11 +1366,57 @@ const PatientProfile = () => {
                 </div>
               </div>
             )}
+
+            {activeTab === 'subir' && <SubirTab />}
           </div>
         </div>
       </div>
     </div>
   );
 };
+
+// Accordion component for consultations
+function ConsultationAccordion({ consultation, defaultOpen = false }: { consultation: ConsultationType; defaultOpen?: boolean }) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className="bg-white rounded-lg shadow border">
+      <button
+        className="w-full flex justify-between items-center px-4 py-3 text-left font-semibold text-blue-700 hover:bg-blue-50 rounded-t-lg focus:outline-none"
+        onClick={() => setOpen(v => !v)}
+      >
+        <span>
+          {consultation.date.split('-').reverse().join('/')} - {consultation.diagnosticoPresuntivo}
+        </span>
+        <span>{open ? '▲' : '▼'}</span>
+      </button>
+      {open && (
+        <div className="px-6 py-4 border-t text-sm text-gray-800 space-y-2">
+          <div><span className="font-semibold">Motivo de consulta:</span> {consultation.motivoConsulta}</div>
+          <div><span className="font-semibold">Antecedentes de la enfermedad actual:</span> {consultation.antecedentesEnfActual}</div>
+          <div><span className="font-semibold">Antecedentes patológicos personales:</span> {consultation.antecedentesPatologicos}</div>
+          <div><span className="font-semibold">Medicación habitual:</span> {consultation.medicacionHabitual}</div>
+          <div><span className="font-semibold">Alergias:</span> {consultation.alergias}</div>
+          <div><span className="font-semibold">Antecedentes quirúrgicos:</span> {consultation.antecedentesQuirurgicos}</div>
+          <div><span className="font-semibold">Antecedentes Heredo familiares:</span> {consultation.antecedentesHeredo}</div>
+          <div><span className="font-semibold">Antecedentes oftalmológicos:</span> {consultation.antecedentesOftalmo}</div>
+          <div><span className="font-semibold">Datos Accesorios Relevantes:</span> {consultation.datosAccesorios}</div>
+          <div className="font-semibold mt-2">Examen Oftalmológico</div>
+          <div className="ml-2">
+            <div>Agudeza Visual Lejos: OD {consultation.examenOftalmo.agudezaVisualLejos.od}, OI {consultation.examenOftalmo.agudezaVisualLejos.oi}</div>
+            <div>Agudeza Visual Cerca: OD {consultation.examenOftalmo.agudezaVisualCerca.od}, OI {consultation.examenOftalmo.agudezaVisualCerca.oi}</div>
+            <div>Presión Intraocular: OD {consultation.examenOftalmo.presionIntraocular.od}, OI {consultation.examenOftalmo.presionIntraocular.oi}</div>
+            <div>Fondo de ojos: {consultation.examenOftalmo.fondoOjos}</div>
+            <div>Otros estudios: {consultation.examenOftalmo.otrosEstudios}</div>
+          </div>
+          <div><span className="font-semibold">Notas extra:</span> {consultation.notasExtra}</div>
+          <div><span className="font-semibold">Diagnóstico presuntivo:</span> {consultation.diagnosticoPresuntivo}</div>
+          <div><span className="font-semibold">Plan de estudios:</span> {consultation.planEstudios}</div>
+          <div><span className="font-semibold">Plan terapéutico:</span> {consultation.planTerapeutico}</div>
+          <div><span className="font-semibold">Próximo control:</span> {consultation.proximoControl}</div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default PatientProfile; 

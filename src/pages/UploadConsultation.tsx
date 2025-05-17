@@ -97,7 +97,7 @@ const UploadConsultation = () => {
 
         {/* Render dynamic blocks */}
         {blocks.map((block, idx) => {
-          const handleRemove = () => setBlocks(prev => prev.filter((b, i) => i !== idx));
+          const handleRemove = () => setBlocks(prev => prev.filter((_, i) => i !== idx));
           if (block.type === 'visualAcuity') {
             return (
               <div key={block.type} className="relative grid grid-cols-1 md:grid-cols-2 gap-6">
