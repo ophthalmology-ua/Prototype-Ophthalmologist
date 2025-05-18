@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Calendar, 
@@ -382,12 +382,24 @@ function SubirTab() {
   const [isStudyModalOpen, setIsStudyModalOpen] = useState(false);
   // UploadStudy modal state
   const [detectionMode, setDetectionMode] = useState<'auto' | 'manual'>('auto');
+  const [studyType, setStudyType] = useState('oct'); // NEW: study type state
   const [octFields, setOctFields] = useState({
     centralThickness: '',
     retinalVolume: '',
     averageThickness: ''
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  // NEW: Retinografía fields
+  const [retinoFields, setRetinoFields] = useState({
+    findings: '',
+    imageQuality: ''
+  });
+  // NEW: Campimetría fields
+  const [campiFields, setCampiFields] = useState({
+    md: '',
+    psd: '',
+    vfi: ''
+  });
   // Collapsible states for ophthalmologic exam
   const [isToleradaOpen, setIsToleradaOpen] = useState(false);
   const [isPrescripcionOpen, setIsPrescripcionOpen] = useState(false);
@@ -420,6 +432,13 @@ function SubirTab() {
     setOctFields({ centralThickness: '', retinalVolume: '', averageThickness: '' });
     setSelectedFile(null);
   };
+
+  // Whenever studyType changes, if not 'oct', force detectionMode to 'manual'
+  useEffect(() => {
+    if (studyType !== 'oct') {
+      setDetectionMode('manual');
+    }
+  }, [studyType]);
 
   return (
     <form className="space-y-8">
@@ -630,6 +649,7 @@ function SubirTab() {
                       value="auto"
                       checked={detectionMode === 'auto'}
                       onChange={() => setDetectionMode('auto')}
+                      disabled={studyType !== 'oct'}
                     />
                     Detección automática
                   </label>
@@ -643,6 +663,19 @@ function SubirTab() {
                     />
                     Ingreso manual
                   </label>
+                </div>
+                {/* Study type dropdown */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Tipo de estudio</label>
+                  <select
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={studyType}
+                    onChange={e => setStudyType(e.target.value)}
+                  >
+                    <option value="oct">OCT</option>
+                    <option value="retinografia">Retinografía</option>
+                    <option value="campimetria">Campimetría</option>
+                  </select>
                 </div>
                 {/* File upload always shown */}
                 <div className="text-center mb-6">
@@ -665,40 +698,102 @@ function SubirTab() {
                   </label>
                   {selectedFile && <div className="mt-2 text-sm text-gray-700">Archivo seleccionado: {selectedFile.name}</div>}
                 </div>
-                {/* Manual OCT fields */}
+                {/* Manual fields for each study type */}
                 {detectionMode === 'manual' && (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Espesor macular central (μm)</label>
-                      <input
-                        type="number"
-                        value={octFields.centralThickness}
-                        onChange={e => setOctFields(f => ({ ...f, centralThickness: e.target.value }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Ej: 285"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Volumen retiniano (mm³)</label>
-                      <input
-                        type="number"
-                        value={octFields.retinalVolume}
-                        onChange={e => setOctFields(f => ({ ...f, retinalVolume: e.target.value }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Ej: 8.7"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Espesor medio (μm)</label>
-                      <input
-                        type="number"
-                        value={octFields.averageThickness}
-                        onChange={e => setOctFields(f => ({ ...f, averageThickness: e.target.value }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Ej: 310"
-                      />
-                    </div>
-                  </div>
+                  <>
+                    {studyType === 'oct' && (
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Espesor macular central (μm)</label>
+                          <input
+                            type="number"
+                            value={octFields.centralThickness}
+                            onChange={e => setOctFields(f => ({ ...f, centralThickness: e.target.value }))}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="Ej: 285"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Volumen retiniano (mm³)</label>
+                          <input
+                            type="number"
+                            value={octFields.retinalVolume}
+                            onChange={e => setOctFields(f => ({ ...f, retinalVolume: e.target.value }))}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="Ej: 8.7"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Espesor medio (μm)</label>
+                          <input
+                            type="number"
+                            value={octFields.averageThickness}
+                            onChange={e => setOctFields(f => ({ ...f, averageThickness: e.target.value }))}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="Ej: 310"
+                          />
+                        </div>
+                      </div>
+                    )}
+                    {studyType === 'retinografia' && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Hallazgos principales</label>
+                          <input
+                            type="text"
+                            value={retinoFields.findings}
+                            onChange={e => setRetinoFields(f => ({ ...f, findings: e.target.value }))}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="Ej: Drusas, hemorragias, etc."
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Calidad de imagen</label>
+                          <input
+                            type="text"
+                            value={retinoFields.imageQuality}
+                            onChange={e => setRetinoFields(f => ({ ...f, imageQuality: e.target.value }))}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="Ej: Buena, regular, mala"
+                          />
+                        </div>
+                      </div>
+                    )}
+                    {studyType === 'campimetria' && (
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">MD</label>
+                          <input
+                            type="number"
+                            value={campiFields.md}
+                            onChange={e => setCampiFields(f => ({ ...f, md: e.target.value }))}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="Ej: -2.5"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">PSD</label>
+                          <input
+                            type="number"
+                            value={campiFields.psd}
+                            onChange={e => setCampiFields(f => ({ ...f, psd: e.target.value }))}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="Ej: 1.8"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">VFI (%)</label>
+                          <input
+                            type="number"
+                            value={campiFields.vfi}
+                            onChange={e => setCampiFields(f => ({ ...f, vfi: e.target.value }))}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="Ej: 95"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </>
                 )}
                 <div className="flex justify-end">
                   <button
