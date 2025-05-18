@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Calendar, 
@@ -345,6 +345,14 @@ type ConsultationType = {
   proximoControl: string;
 };
 
+// Add Study type
+interface Study {
+  id: number;
+  type: string;
+  file: File | null;
+  fields: Record<string, string>;
+}
+
 function SubirTab() {
   // Patient data
   const [patientData, setPatientData] = useState({
@@ -366,10 +374,9 @@ function SubirTab() {
   const [antecedentesOftalmo, setAntecedentesOftalmo] = useState('');
   const [datosAccesorios, setDatosAccesorios] = useState('');
   // Estudios
-  const [studies, setStudies] = useState<{ id: number; file: File | null }[]>([]);
+  const [studies, setStudies] = useState<Study[]>([]);
   // Notas extra, diagnóstico, plan, próximo control
   const [notasExtra, setNotasExtra] = useState('');
-  const [diagnosticoPresuntivo, setDiagnosticoPresuntivo] = useState('');
   const [planEstudios, setPlanEstudios] = useState('');
   const [planTerapeutico, setPlanTerapeutico] = useState('');
   const [planTerapeuticoNoFarm, setPlanTerapeuticoNoFarm] = useState('');
@@ -379,9 +386,7 @@ function SubirTab() {
   const [planUnidad, setPlanUnidad] = useState('');
   const [planFarmacoOtro, setPlanFarmacoOtro] = useState('');
   const [proximoControl, setProximoControl] = useState('');
-  const [isStudyModalOpen, setIsStudyModalOpen] = useState(false);
   // UploadStudy modal state
-  const [detectionMode, setDetectionMode] = useState<'auto' | 'manual'>('auto');
   const [studyType, setStudyType] = useState('oct'); // NEW: study type state
   const [octFields, setOctFields] = useState({
     centralThickness: '',
@@ -408,10 +413,50 @@ function SubirTab() {
   const [isBiomicroscopiaOpen, setIsBiomicroscopiaOpen] = useState(false);
   // Collapsible state for patient data
   const [isDatosPacienteOpen, setIsDatosPacienteOpen] = useState(false);
+  // Add state for angiografia fields
+  const [angioFields, setAngioFields] = useState({
+    fovealAvascularZone: '',
+    leakage: '',
+    nonPerfusedAreas: '',
+    microaneurysms: '',
+    neovascularization: '',
+    capillaryDropout: '',
+    arteriovenousShunt: '',
+    venousBeading: '',
+    macularEdema: '',
+    hardExudates: '',
+    cottonWoolSpots: '',
+    hemorrhages: '',
+    vesselTortuosity: '',
+    choroidalNeovascularization: '',
+    centralRetinalThickness: '',
+    comments: '',
+  });
+  // New state for detecting values
+  const [isDetecting, setIsDetecting] = useState(false);
+  // Add Diagnóstico type and state
+  const DIAGNOSIS_OPTIONS = [
+    'DMAE',
+    'Retinopatía diabética',
+    'Glaucoma',
+    'Cataratas',
+    'Otras'
+  ];
+  interface Diagnosis {
+    diagnosis: string;
+    status: 'Presuntivo' | 'Confirmado';
+  }
+  const [diagnosisInput, setDiagnosisInput] = useState(DIAGNOSIS_OPTIONS[0]);
+  const [diagnosisStatus, setDiagnosisStatus] = useState<'Presuntivo' | 'Confirmado'>('Presuntivo');
+  const [diagnoses, setDiagnoses] = useState<Diagnosis[]>([]);
 
-  const handleStudyFileChange = (idx: number, file: File | null) => {
-    setStudies(prev => prev.map((s, i) => i === idx ? { ...s, file } : s));
+  const handleAddDiagnosis = () => {
+    setDiagnoses(prev => [...prev, { diagnosis: diagnosisInput, status: diagnosisStatus }]);
   };
+  const handleRemoveDiagnosis = (idx: number) => {
+    setDiagnoses(prev => prev.filter((_, i) => i !== idx));
+  };
+
   const handleRemoveStudy = (idx: number) => {
     setStudies(prev => prev.filter((_, i) => i !== idx));
   };
@@ -421,24 +466,38 @@ function SubirTab() {
       setSelectedFile(e.target.files[0]);
     }
   };
-  const handleStudyModalSave = () => {
-    // Add study to list if a file is selected
-    if (selectedFile) {
-      setStudies(prev => [...prev, { id: Date.now(), file: selectedFile }]);
-    }
-    setIsStudyModalOpen(false);
-    // Reset modal state if needed
-    setDetectionMode('auto');
-    setOctFields({ centralThickness: '', retinalVolume: '', averageThickness: '' });
-    setSelectedFile(null);
-  };
 
-  // Whenever studyType changes, if not 'oct', force detectionMode to 'manual'
-  useEffect(() => {
-    if (studyType !== 'oct') {
-      setDetectionMode('manual');
-    }
-  }, [studyType]);
+  // Add back handleAddStudy for adding multiple studies
+  const handleAddStudy = () => {
+    const studyData: Omit<Study, 'id'> = { type: studyType, file: selectedFile, fields: {} };
+    if (studyType === 'oct') studyData.fields = { ...octFields };
+    if (studyType === 'retinografia') studyData.fields = { ...retinoFields };
+    if (studyType === 'campimetria') studyData.fields = { ...campiFields };
+    if (studyType === 'angiografia') studyData.fields = { ...angioFields };
+    setStudies(prev => [...prev, { id: Date.now(), ...studyData }]);
+    setSelectedFile(null);
+    setOctFields({ centralThickness: '', retinalVolume: '', averageThickness: '' });
+    setRetinoFields({ findings: '', imageQuality: '' });
+    setCampiFields({ md: '', psd: '', vfi: '' });
+    setAngioFields({
+      fovealAvascularZone: '',
+      leakage: '',
+      nonPerfusedAreas: '',
+      microaneurysms: '',
+      neovascularization: '',
+      capillaryDropout: '',
+      arteriovenousShunt: '',
+      venousBeading: '',
+      macularEdema: '',
+      hardExudates: '',
+      cottonWoolSpots: '',
+      hemorrhages: '',
+      vesselTortuosity: '',
+      choroidalNeovascularization: '',
+      centralRetinalThickness: '',
+      comments: '',
+    });
+  };
 
   return (
     <form className="space-y-8">
@@ -616,208 +675,397 @@ function SubirTab() {
       {/* Estudios (add study container with + button) */}
       <div className="bg-white rounded-xl p-6 border">
         <h2 className="font-bold text-lg mb-4">Subida de estudios</h2>
-        {/* Only show study file inputs if there are studies */}
+        {/* Study type dropdown, file upload, and dynamic fields always visible */}
+        <div className="mb-6">
+          {/* Study type dropdown */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">Tipo de estudio</label>
+            <select
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={studyType}
+              onChange={e => setStudyType(e.target.value)}
+            >
+              <option value="oct">OCT</option>
+              <option value="retinografia">Retinografía</option>
+              <option value="campimetria">Campimetría</option>
+              <option value="angiografia">Angiografía</option>
+            </select>
+          </div>
+          {/* File upload always shown */}
+          <div className="text-center mb-6">
+            <Upload className="mx-auto h-12 w-12 text-gray-400" />
+            <div className="mt-4">
+              <h3 className="text-lg font-medium text-gray-900">Arrastre y suelte archivos aquí</h3>
+              <p className="mt-1 text-sm text-gray-500">o haga clic para seleccionar</p>
+            </div>
+            <input
+              type="file"
+              onChange={handleFileChange}
+              className="hidden"
+              id="file-upload-section"
+            />
+            <label
+              htmlFor="file-upload-section"
+              className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer"
+            >
+              Seleccionar archivo
+            </label>
+            {selectedFile && <div className="mt-2 text-sm text-gray-700">Archivo seleccionado: {selectedFile.name}</div>}
+          </div>
+          {/* Detectar button and fields for each study type */}
+          {studyType === 'oct' && (
+            <>
+              <div className="flex items-center mb-4">
+                <button
+                  type="button"
+                  className={`px-4 py-2 rounded-md font-medium text-white ${isDetecting ? 'bg-blue-300' : 'bg-blue-600 hover:bg-blue-700'} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 mr-4`}
+                  disabled={isDetecting}
+                  onClick={async () => {
+                    setIsDetecting(true);
+                    setTimeout(() => {
+                      setOctFields({
+                        centralThickness: '285',
+                        retinalVolume: '8.7',
+                        averageThickness: '310',
+                      });
+                      setIsDetecting(false);
+                    }, 1500);
+                  }}
+                >
+                  Detectar
+                </button>
+                {isDetecting && <span className="text-blue-700 font-medium">Detectando valores...</span>}
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Espesor macular central (μm)</label>
+                  <input
+                    type="number"
+                    value={octFields.centralThickness}
+                    onChange={e => setOctFields(f => ({ ...f, centralThickness: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Ej: 285"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Volumen retiniano (mm³)</label>
+                  <input
+                    type="number"
+                    value={octFields.retinalVolume}
+                    onChange={e => setOctFields(f => ({ ...f, retinalVolume: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Ej: 8.7"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Espesor medio (μm)</label>
+                  <input
+                    type="number"
+                    value={octFields.averageThickness}
+                    onChange={e => setOctFields(f => ({ ...f, averageThickness: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Ej: 310"
+                  />
+                </div>
+              </div>
+            </>
+          )}
+          {studyType === 'retinografia' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Hallazgos principales</label>
+                <input
+                  type="text"
+                  value={retinoFields.findings}
+                  onChange={e => setRetinoFields(f => ({ ...f, findings: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Ej: Drusas, hemorragias, etc."
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Calidad de imagen</label>
+                <input
+                  type="text"
+                  value={retinoFields.imageQuality}
+                  onChange={e => setRetinoFields(f => ({ ...f, imageQuality: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Ej: Buena, regular, mala"
+                />
+              </div>
+            </div>
+          )}
+          {studyType === 'campimetria' && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">MD</label>
+                <input
+                  type="number"
+                  value={campiFields.md}
+                  onChange={e => setCampiFields(f => ({ ...f, md: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Ej: -2.5"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">PSD</label>
+                <input
+                  type="number"
+                  value={campiFields.psd}
+                  onChange={e => setCampiFields(f => ({ ...f, psd: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Ej: 1.8"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">VFI (%)</label>
+                <input
+                  type="number"
+                  value={campiFields.vfi}
+                  onChange={e => setCampiFields(f => ({ ...f, vfi: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Ej: 95"
+                />
+              </div>
+            </div>
+          )}
+          {studyType === 'angiografia' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 max-h-[60vh] overflow-y-auto pr-2">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Zona avascular foveal</label>
+                <input
+                  type="text"
+                  value={angioFields.fovealAvascularZone}
+                  onChange={e => setAngioFields(f => ({ ...f, fovealAvascularZone: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  placeholder="Ej: 0.3 mm²"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Leakage</label>
+                <input
+                  type="text"
+                  value={angioFields.leakage}
+                  onChange={e => setAngioFields(f => ({ ...f, leakage: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  placeholder="Ej: Presente/ausente"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Áreas no perfundidas</label>
+                <input
+                  type="text"
+                  value={angioFields.nonPerfusedAreas}
+                  onChange={e => setAngioFields(f => ({ ...f, nonPerfusedAreas: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  placeholder="Ej: 2 zonas"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Microaneurismas</label>
+                <input
+                  type="text"
+                  value={angioFields.microaneurysms}
+                  onChange={e => setAngioFields(f => ({ ...f, microaneurysms: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  placeholder="Ej: Numerosos"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Neovascularización</label>
+                <input
+                  type="text"
+                  value={angioFields.neovascularization}
+                  onChange={e => setAngioFields(f => ({ ...f, neovascularization: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  placeholder="Ej: No"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Dropout capilar</label>
+                <input
+                  type="text"
+                  value={angioFields.capillaryDropout}
+                  onChange={e => setAngioFields(f => ({ ...f, capillaryDropout: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  placeholder="Ej: Leve"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Shunt arteriovenoso</label>
+                <input
+                  type="text"
+                  value={angioFields.arteriovenousShunt}
+                  onChange={e => setAngioFields(f => ({ ...f, arteriovenousShunt: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  placeholder="Ej: No"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Venous beading</label>
+                <input
+                  type="text"
+                  value={angioFields.venousBeading}
+                  onChange={e => setAngioFields(f => ({ ...f, venousBeading: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  placeholder="Ej: Moderado"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Edema macular</label>
+                <input
+                  type="text"
+                  value={angioFields.macularEdema}
+                  onChange={e => setAngioFields(f => ({ ...f, macularEdema: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  placeholder="Ej: Presente"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Exudados duros</label>
+                <input
+                  type="text"
+                  value={angioFields.hardExudates}
+                  onChange={e => setAngioFields(f => ({ ...f, hardExudates: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  placeholder="Ej: Pocos"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Algodón</label>
+                <input
+                  type="text"
+                  value={angioFields.cottonWoolSpots}
+                  onChange={e => setAngioFields(f => ({ ...f, cottonWoolSpots: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  placeholder="Ej: No"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Hemorragias</label>
+                <input
+                  type="text"
+                  value={angioFields.hemorrhages}
+                  onChange={e => setAngioFields(f => ({ ...f, hemorrhages: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  placeholder="Ej: Leves"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Tortuosidad vascular</label>
+                <input
+                  type="text"
+                  value={angioFields.vesselTortuosity}
+                  onChange={e => setAngioFields(f => ({ ...f, vesselTortuosity: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  placeholder="Ej: Aumentada"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Neovascularización coroidea</label>
+                <input
+                  type="text"
+                  value={angioFields.choroidalNeovascularization}
+                  onChange={e => setAngioFields(f => ({ ...f, choroidalNeovascularization: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  placeholder="Ej: No"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Espesor retiniano central</label>
+                <input
+                  type="text"
+                  value={angioFields.centralRetinalThickness}
+                  onChange={e => setAngioFields(f => ({ ...f, centralRetinalThickness: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  placeholder="Ej: 285 μm"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Comentarios</label>
+                <textarea
+                  value={angioFields.comments}
+                  onChange={e => setAngioFields(f => ({ ...f, comments: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  placeholder="Observaciones adicionales"
+                />
+              </div>
+            </div>
+          )}
+        </div>
+        {/* Agregar estudio button */}
+        <div className="flex justify-end">
+          <button
+            type="button"
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            onClick={handleAddStudy}
+            disabled={!selectedFile}
+          >
+            Agregar estudio
+          </button>
+        </div>
+        {/* List of added studies */}
         {studies.length > 0 && studies.map((study, idx) => (
           <div key={study.id} className="flex items-center gap-4 mb-2">
-            <input type="file" onChange={e => handleStudyFileChange(idx, e.target.files?.[0] || null)} />
+            <span className="text-gray-700 font-semibold">{study.type.toUpperCase()}</span>
+            <span className="text-gray-700">{study.file?.name}</span>
             <button type="button" className="text-red-500" onClick={() => handleRemoveStudy(idx)}>Eliminar</button>
           </div>
         ))}
-        {/* Only show the + Agregar estudio button if there are no studies */}
-        {studies.length === 0 && (
-          <button type="button" className="mt-2 px-4 py-2 bg-blue-100 text-blue-700 rounded hover:bg-blue-200" onClick={() => setIsStudyModalOpen(true)}>+ Agregar estudio</button>
-        )}
-        {/* Study Upload Modal */}
-        {isStudyModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-            <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-lg relative">
-              <button
-                className="absolute top-2 right-2 text-gray-400 hover:text-red-500 text-2xl font-bold focus:outline-none"
-                onClick={() => setIsStudyModalOpen(false)}
-                aria-label="Cerrar"
-              >
-                ×
-              </button>
-              <h1 className="text-2xl font-bold text-gray-800 mb-6">Subir Estudio</h1>
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8">
-                {/* Detection mode toggle */}
-                <div className="flex gap-4 mb-6">
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="radio"
-                      name="detectionMode"
-                      value="auto"
-                      checked={detectionMode === 'auto'}
-                      onChange={() => setDetectionMode('auto')}
-                      disabled={studyType !== 'oct'}
-                    />
-                    Detección automática
-                  </label>
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="radio"
-                      name="detectionMode"
-                      value="manual"
-                      checked={detectionMode === 'manual'}
-                      onChange={() => setDetectionMode('manual')}
-                    />
-                    Ingreso manual
-                  </label>
-                </div>
-                {/* Study type dropdown */}
-                <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Tipo de estudio</label>
-                  <select
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    value={studyType}
-                    onChange={e => setStudyType(e.target.value)}
-                  >
-                    <option value="oct">OCT</option>
-                    <option value="retinografia">Retinografía</option>
-                    <option value="campimetria">Campimetría</option>
-                  </select>
-                </div>
-                {/* File upload always shown */}
-                <div className="text-center mb-6">
-                  <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                  <div className="mt-4">
-                    <h3 className="text-lg font-medium text-gray-900">Arrastre y suelte archivos aquí</h3>
-                    <p className="mt-1 text-sm text-gray-500">o haga clic para seleccionar</p>
-                  </div>
-                  <input
-                    type="file"
-                    onChange={handleFileChange}
-                    className="hidden"
-                    id="file-upload-modal"
-                  />
-                  <label
-                    htmlFor="file-upload-modal"
-                    className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer"
-                  >
-                    Seleccionar archivo
-                  </label>
-                  {selectedFile && <div className="mt-2 text-sm text-gray-700">Archivo seleccionado: {selectedFile.name}</div>}
-                </div>
-                {/* Manual fields for each study type */}
-                {detectionMode === 'manual' && (
-                  <>
-                    {studyType === 'oct' && (
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Espesor macular central (μm)</label>
-                          <input
-                            type="number"
-                            value={octFields.centralThickness}
-                            onChange={e => setOctFields(f => ({ ...f, centralThickness: e.target.value }))}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="Ej: 285"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Volumen retiniano (mm³)</label>
-                          <input
-                            type="number"
-                            value={octFields.retinalVolume}
-                            onChange={e => setOctFields(f => ({ ...f, retinalVolume: e.target.value }))}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="Ej: 8.7"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Espesor medio (μm)</label>
-                          <input
-                            type="number"
-                            value={octFields.averageThickness}
-                            onChange={e => setOctFields(f => ({ ...f, averageThickness: e.target.value }))}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="Ej: 310"
-                          />
-                        </div>
-                      </div>
-                    )}
-                    {studyType === 'retinografia' && (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Hallazgos principales</label>
-                          <input
-                            type="text"
-                            value={retinoFields.findings}
-                            onChange={e => setRetinoFields(f => ({ ...f, findings: e.target.value }))}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="Ej: Drusas, hemorragias, etc."
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Calidad de imagen</label>
-                          <input
-                            type="text"
-                            value={retinoFields.imageQuality}
-                            onChange={e => setRetinoFields(f => ({ ...f, imageQuality: e.target.value }))}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="Ej: Buena, regular, mala"
-                          />
-                        </div>
-                      </div>
-                    )}
-                    {studyType === 'campimetria' && (
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">MD</label>
-                          <input
-                            type="number"
-                            value={campiFields.md}
-                            onChange={e => setCampiFields(f => ({ ...f, md: e.target.value }))}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="Ej: -2.5"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">PSD</label>
-                          <input
-                            type="number"
-                            value={campiFields.psd}
-                            onChange={e => setCampiFields(f => ({ ...f, psd: e.target.value }))}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="Ej: 1.8"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">VFI (%)</label>
-                          <input
-                            type="number"
-                            value={campiFields.vfi}
-                            onChange={e => setCampiFields(f => ({ ...f, vfi: e.target.value }))}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="Ej: 95"
-                          />
-                        </div>
-                      </div>
-                    )}
-                  </>
-                )}
-                <div className="flex justify-end">
-                  <button
-                    type="button"
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                    onClick={handleStudyModalSave}
-                  >
-                    Guardar estudio
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
       {/* Notas extra */}
       <div className="bg-white rounded-xl p-6 border">
         <h2 className="font-bold text-lg mb-4">Notas extra</h2>
         <textarea className="w-full border rounded px-3 py-2 mb-2" placeholder="Notas extra" value={notasExtra} onChange={e => setNotasExtra(e.target.value)} />
       </div>
-      {/* Diagnóstico presuntivo */}
+      {/* Diagnóstico presuntivo (now multiple diagnoses) */}
       <div className="bg-white rounded-xl p-6 border">
-        <h2 className="font-bold text-lg mb-4">Diagnóstico presuntivo</h2>
-        <input className="w-full border rounded px-3 py-2 mb-2" placeholder="Diagnóstico presuntivo" value={diagnosticoPresuntivo} onChange={e => setDiagnosticoPresuntivo(e.target.value)} />
+        <h2 className="font-bold text-lg mb-4">Diagnósticos</h2>
+        <div className="flex flex-col md:flex-row md:items-center gap-4 mb-4">
+          <div className="flex-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Diagnóstico</label>
+            <select
+              className="w-full border rounded px-3 py-2"
+              value={diagnosisInput}
+              onChange={e => setDiagnosisInput(e.target.value)}
+            >
+              {DIAGNOSIS_OPTIONS.map(opt => (
+                <option key={opt} value={opt}>{opt}</option>
+              ))}
+            </select>
+          </div>
+          <div className="flex-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Estado</label>
+            <select
+              className="w-full border rounded px-3 py-2"
+              value={diagnosisStatus}
+              onChange={e => setDiagnosisStatus(e.target.value as 'Presuntivo' | 'Confirmado')}
+            >
+              <option value="Presuntivo">Presuntivo</option>
+              <option value="Confirmado">Confirmado</option>
+            </select>
+          </div>
+          <div className="flex items-end">
+            <button
+              type="button"
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              onClick={handleAddDiagnosis}
+            >
+              Agregar diagnóstico
+            </button>
+          </div>
+        </div>
+        {/* List of added diagnoses */}
+        {diagnoses.length > 0 && (
+          <div className="mt-2">
+            {diagnoses.map((d, idx) => (
+              <div key={idx} className="flex items-center gap-4 mb-2 bg-blue-50 rounded px-3 py-2">
+                <span className="font-semibold text-blue-900">{d.diagnosis}</span>
+                <span className="text-blue-700">{d.status}</span>
+                <button type="button" className="text-red-500 ml-auto" onClick={() => handleRemoveDiagnosis(idx)}>Eliminar</button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
       {/* Plan de estudios */}
       <div className="bg-white rounded-xl p-6 border">
