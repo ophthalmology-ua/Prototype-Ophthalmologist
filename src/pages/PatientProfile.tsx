@@ -378,13 +378,27 @@ function SubirTab() {
   // Notas extra, diagnóstico, plan, próximo control
   const [notasExtra, setNotasExtra] = useState('');
   const [planEstudios, setPlanEstudios] = useState('');
-  const [planTerapeutico, setPlanTerapeutico] = useState('');
-  const [planTerapeuticoNoFarm, setPlanTerapeuticoNoFarm] = useState('');
-  const [planViaFarm, setPlanViaFarm] = useState('');
-  const [planFarmaco, setPlanFarmaco] = useState('');
-  const [planCantidad, setPlanCantidad] = useState('');
-  const [planUnidad, setPlanUnidad] = useState('');
-  const [planFarmacoOtro, setPlanFarmacoOtro] = useState('');
+  // Treatment plan type and state
+  interface TreatmentPlan {
+    type: string;
+    noFarm: string;
+    via: string;
+    farmaco: string;
+    cantidad: string;
+    unidad: string;
+    farmacoOtro: string;
+  }
+  const [treatmentPlanInput, setTreatmentPlanInput] = useState<TreatmentPlan>({
+    type: '',
+    noFarm: '',
+    via: '',
+    farmaco: '',
+    cantidad: '',
+    unidad: '',
+    farmacoOtro: '',
+  });
+  const [treatmentPlans, setTreatmentPlans] = useState<TreatmentPlan[]>([]);
+  const [editTreatmentIdx, setEditTreatmentIdx] = useState<number | null>(null);
   const [proximoControl, setProximoControl] = useState('');
   // UploadStudy modal state
   const [studyType, setStudyType] = useState('oct'); // NEW: study type state
@@ -449,6 +463,7 @@ function SubirTab() {
   const [diagnosisInput, setDiagnosisInput] = useState(DIAGNOSIS_OPTIONS[0]);
   const [diagnosisStatus, setDiagnosisStatus] = useState<'Presuntivo' | 'Confirmado'>('Presuntivo');
   const [diagnoses, setDiagnoses] = useState<Diagnosis[]>([]);
+  const [editStudyIdx, setEditStudyIdx] = useState<number | null>(null);
 
   const handleAddDiagnosis = () => {
     setDiagnoses(prev => [...prev, { diagnosis: diagnosisInput, status: diagnosisStatus }]);
@@ -497,6 +512,105 @@ function SubirTab() {
       centralRetinalThickness: '',
       comments: '',
     });
+  };
+
+  const handleEditStudy = (idx: number) => {
+    const study = studies[idx];
+    setEditStudyIdx(idx);
+    setStudyType(study.type);
+    setSelectedFile(study.file);
+    if (study.type === 'oct') setOctFields(study.fields as typeof octFields);
+    if (study.type === 'retinografia') setRetinoFields(study.fields as typeof retinoFields);
+    if (study.type === 'campimetria') setCampiFields(study.fields as typeof campiFields);
+    if (study.type === 'angiografia') setAngioFields(study.fields as typeof angioFields);
+  };
+
+  const handleSaveEditStudy = () => {
+    const updatedStudies = [...studies];
+    let updatedFields: Record<string, string> = {};
+    if (studyType === 'oct') updatedFields = { ...octFields };
+    if (studyType === 'retinografia') updatedFields = { ...retinoFields };
+    if (studyType === 'campimetria') updatedFields = { ...campiFields };
+    if (studyType === 'angiografia') updatedFields = { ...angioFields };
+    updatedStudies[editStudyIdx!] = {
+      id: updatedStudies[editStudyIdx!].id,
+      type: studyType,
+      file: selectedFile,
+      fields: updatedFields,
+    };
+    setStudies(updatedStudies);
+    setEditStudyIdx(null);
+    setSelectedFile(null);
+    setOctFields({ centralThickness: '', retinalVolume: '', averageThickness: '' });
+    setRetinoFields({ findings: '', imageQuality: '' });
+    setCampiFields({ md: '', psd: '', vfi: '' });
+    setAngioFields({
+      fovealAvascularZone: '',
+      leakage: '',
+      nonPerfusedAreas: '',
+      microaneurysms: '',
+      neovascularization: '',
+      capillaryDropout: '',
+      arteriovenousShunt: '',
+      venousBeading: '',
+      macularEdema: '',
+      hardExudates: '',
+      cottonWoolSpots: '',
+      hemorrhages: '',
+      vesselTortuosity: '',
+      choroidalNeovascularization: '',
+      centralRetinalThickness: '',
+      comments: '',
+    });
+  };
+
+  const handleCancelEditStudy = () => {
+    setEditStudyIdx(null);
+    setSelectedFile(null);
+    setOctFields({ centralThickness: '', retinalVolume: '', averageThickness: '' });
+    setRetinoFields({ findings: '', imageQuality: '' });
+    setCampiFields({ md: '', psd: '', vfi: '' });
+    setAngioFields({
+      fovealAvascularZone: '',
+      leakage: '',
+      nonPerfusedAreas: '',
+      microaneurysms: '',
+      neovascularization: '',
+      capillaryDropout: '',
+      arteriovenousShunt: '',
+      venousBeading: '',
+      macularEdema: '',
+      hardExudates: '',
+      cottonWoolSpots: '',
+      hemorrhages: '',
+      vesselTortuosity: '',
+      choroidalNeovascularization: '',
+      centralRetinalThickness: '',
+      comments: '',
+    });
+  };
+
+  const handleAddTreatmentPlan = () => {
+    setTreatmentPlans(prev => [...prev, { ...treatmentPlanInput }]);
+    setTreatmentPlanInput({ type: '', noFarm: '', via: '', farmaco: '', cantidad: '', unidad: '', farmacoOtro: '' });
+  };
+  const handleEditTreatmentPlan = (idx: number) => {
+    setEditTreatmentIdx(idx);
+    setTreatmentPlanInput({ ...treatmentPlans[idx] });
+  };
+  const handleSaveEditTreatmentPlan = () => {
+    const updated = [...treatmentPlans];
+    updated[editTreatmentIdx!] = { ...treatmentPlanInput };
+    setTreatmentPlans(updated);
+    setEditTreatmentIdx(null);
+    setTreatmentPlanInput({ type: '', noFarm: '', via: '', farmaco: '', cantidad: '', unidad: '', farmacoOtro: '' });
+  };
+  const handleCancelEditTreatmentPlan = () => {
+    setEditTreatmentIdx(null);
+    setTreatmentPlanInput({ type: '', noFarm: '', via: '', farmaco: '', cantidad: '', unidad: '', farmacoOtro: '' });
+  };
+  const handleRemoveTreatmentPlan = (idx: number) => {
+    setTreatmentPlans(prev => prev.filter((_, i) => i !== idx));
   };
 
   return (
@@ -993,22 +1107,32 @@ function SubirTab() {
           )}
         </div>
         {/* Agregar estudio button */}
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-2">
           <button
             type="button"
             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            onClick={handleAddStudy}
+            onClick={editStudyIdx === null ? handleAddStudy : handleSaveEditStudy}
             disabled={!selectedFile}
           >
-            Agregar estudio
+            {editStudyIdx === null ? 'Agregar estudio' : 'Guardar cambios'}
           </button>
+          {editStudyIdx !== null && (
+            <button
+              type="button"
+              className="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400"
+              onClick={handleCancelEditStudy}
+            >
+              Cancelar
+            </button>
+          )}
         </div>
         {/* List of added studies */}
         {studies.length > 0 && studies.map((study, idx) => (
           <div key={study.id} className="flex items-center gap-4 mb-2">
             <span className="text-gray-700 font-semibold">{study.type.toUpperCase()}</span>
             <span className="text-gray-700">{study.file?.name}</span>
-            <button type="button" className="text-red-500" onClick={() => handleRemoveStudy(idx)}>Eliminar</button>
+            <button type="button" className="text-blue-600" onClick={() => handleEditStudy(idx)} disabled={editStudyIdx !== null && editStudyIdx !== idx}>Editar</button>
+            <button type="button" className="text-red-500" onClick={() => handleRemoveStudy(idx)} disabled={editStudyIdx !== null}>Eliminar</button>
           </div>
         ))}
       </div>
@@ -1072,34 +1196,34 @@ function SubirTab() {
         <h2 className="font-bold text-lg mb-4">Plan de estudios</h2>
         <input className="w-full border rounded px-3 py-2 mb-2" placeholder="Plan de estudios" value={planEstudios} onChange={e => setPlanEstudios(e.target.value)} />
       </div>
-      {/* Plan terapéutico (dynamic dropdowns) */}
+      {/* Plan terapéutico (dynamic dropdowns, now multiple) */}
       <div className="bg-white rounded-xl p-6 border">
         <h2 className="font-bold text-lg mb-4">Plan terapéutico</h2>
         <select
           className="w-full border rounded px-3 py-2 mb-2"
-          value={planTerapeutico}
-          onChange={e => setPlanTerapeutico(e.target.value)}
+          value={treatmentPlanInput.type}
+          onChange={e => setTreatmentPlanInput(tp => ({ ...tp, type: e.target.value }))}
         >
           <option value="">Seleccione tipo de plan</option>
           <option value="farmacologico">Farmacológico</option>
           <option value="no_farmacologico">No farmacológico</option>
         </select>
         {/* No farmacológico: show text field */}
-        {planTerapeutico === 'no_farmacologico' && (
+        {treatmentPlanInput.type === 'no_farmacologico' && (
           <input
             className="w-full border rounded px-3 py-2 mb-2"
             placeholder="Describa el plan no farmacológico"
-            value={planTerapeuticoNoFarm || ''}
-            onChange={e => setPlanTerapeuticoNoFarm(e.target.value)}
+            value={treatmentPlanInput.noFarm || ''}
+            onChange={e => setTreatmentPlanInput(tp => ({ ...tp, noFarm: e.target.value }))}
           />
         )}
         {/* Farmacológico: show route, drug, amount, units */}
-        {planTerapeutico === 'farmacologico' && (
+        {treatmentPlanInput.type === 'farmacologico' && (
           <>
             <select
               className="w-full border rounded px-3 py-2 mb-2"
-              value={planViaFarm || ''}
-              onChange={e => setPlanViaFarm(e.target.value)}
+              value={treatmentPlanInput.via || ''}
+              onChange={e => setTreatmentPlanInput(tp => ({ ...tp, via: e.target.value }))}
             >
               <option value="">Seleccione vía de administración</option>
               <option value="inyeccion">Inyección</option>
@@ -1107,12 +1231,12 @@ function SubirTab() {
               <option value="otro">Otro</option>
             </select>
             {/* Drug and amount for each route */}
-            {planViaFarm === 'inyeccion' && (
+            {treatmentPlanInput.via === 'inyeccion' && (
               <div className="flex flex-col md:flex-row gap-2 mb-2">
                 <select
                   className="flex-1 border rounded px-3 py-2"
-                  value={planFarmaco || ''}
-                  onChange={e => setPlanFarmaco(e.target.value)}
+                  value={treatmentPlanInput.farmaco || ''}
+                  onChange={e => setTreatmentPlanInput(tp => ({ ...tp, farmaco: e.target.value }))}
                 >
                   <option value="">Seleccione fármaco</option>
                   <option value="aflibercept">Aflibercept</option>
@@ -1125,13 +1249,13 @@ function SubirTab() {
                   type="number"
                   min="0"
                   placeholder="Cantidad"
-                  value={planCantidad || ''}
-                  onChange={e => setPlanCantidad(e.target.value)}
+                  value={treatmentPlanInput.cantidad || ''}
+                  onChange={e => setTreatmentPlanInput(tp => ({ ...tp, cantidad: e.target.value }))}
                 />
                 <select
                   className="w-32 border rounded px-3 py-2"
-                  value={planUnidad || ''}
-                  onChange={e => setPlanUnidad(e.target.value)}
+                  value={treatmentPlanInput.unidad || ''}
+                  onChange={e => setTreatmentPlanInput(tp => ({ ...tp, unidad: e.target.value }))}
                 >
                   <option value="">Unidad</option>
                   <option value="mg">mg</option>
@@ -1140,12 +1264,12 @@ function SubirTab() {
                 </select>
               </div>
             )}
-            {planViaFarm === 'oral' && (
+            {treatmentPlanInput.via === 'oral' && (
               <div className="flex flex-col md:flex-row gap-2 mb-2">
                 <select
                   className="flex-1 border rounded px-3 py-2"
-                  value={planFarmaco || ''}
-                  onChange={e => setPlanFarmaco(e.target.value)}
+                  value={treatmentPlanInput.farmaco || ''}
+                  onChange={e => setTreatmentPlanInput(tp => ({ ...tp, farmaco: e.target.value }))}
                 >
                   <option value="">Seleccione fármaco</option>
                   <option value="prednisona">Prednisona</option>
@@ -1157,13 +1281,13 @@ function SubirTab() {
                   type="number"
                   min="0"
                   placeholder="Cantidad"
-                  value={planCantidad || ''}
-                  onChange={e => setPlanCantidad(e.target.value)}
+                  value={treatmentPlanInput.cantidad || ''}
+                  onChange={e => setTreatmentPlanInput(tp => ({ ...tp, cantidad: e.target.value }))}
                 />
                 <select
                   className="w-32 border rounded px-3 py-2"
-                  value={planUnidad || ''}
-                  onChange={e => setPlanUnidad(e.target.value)}
+                  value={treatmentPlanInput.unidad || ''}
+                  onChange={e => setTreatmentPlanInput(tp => ({ ...tp, unidad: e.target.value }))}
                 >
                   <option value="">Unidad</option>
                   <option value="mg">mg</option>
@@ -1172,15 +1296,52 @@ function SubirTab() {
                 </select>
               </div>
             )}
-            {planViaFarm === 'otro' && (
+            {treatmentPlanInput.via === 'otro' && (
               <input
                 className="w-full border rounded px-3 py-2 mb-2"
                 placeholder="Describa la vía y el fármaco"
-                value={planFarmacoOtro || ''}
-                onChange={e => setPlanFarmacoOtro(e.target.value)}
+                value={treatmentPlanInput.farmacoOtro || ''}
+                onChange={e => setTreatmentPlanInput(tp => ({ ...tp, farmacoOtro: e.target.value }))}
               />
             )}
           </>
+        )}
+        <div className="flex justify-end gap-2 mt-2">
+          <button
+            type="button"
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            onClick={editTreatmentIdx === null ? handleAddTreatmentPlan : handleSaveEditTreatmentPlan}
+            disabled={treatmentPlanInput.type === ''}
+          >
+            {editTreatmentIdx === null ? 'Agregar plan terapéutico' : 'Guardar cambios'}
+          </button>
+          {editTreatmentIdx !== null && (
+            <button
+              type="button"
+              className="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400"
+              onClick={handleCancelEditTreatmentPlan}
+            >
+              Cancelar
+            </button>
+          )}
+        </div>
+        {/* List of added treatment plans */}
+        {treatmentPlans.length > 0 && (
+          <div className="mt-4 space-y-2">
+            {treatmentPlans.map((plan, idx) => (
+              <div key={idx} className="flex items-center gap-4 bg-green-50 rounded px-3 py-2">
+                <span className="font-semibold text-green-900">{plan.type === 'farmacologico' ? 'Farmacológico' : 'No farmacológico'}</span>
+                {plan.type === 'farmacologico' && (
+                  <span className="text-green-700">{plan.via} {plan.farmaco} {plan.cantidad} {plan.unidad} {plan.farmacoOtro}</span>
+                )}
+                {plan.type === 'no_farmacologico' && (
+                  <span className="text-green-700">{plan.noFarm}</span>
+                )}
+                <button type="button" className="text-blue-600" onClick={() => handleEditTreatmentPlan(idx)} disabled={editTreatmentIdx !== null && editTreatmentIdx !== idx}>Editar</button>
+                <button type="button" className="text-red-500" onClick={() => handleRemoveTreatmentPlan(idx)} disabled={editTreatmentIdx !== null}>Eliminar</button>
+              </div>
+            ))}
+          </div>
         )}
       </div>
       {/* Próximo control */}
