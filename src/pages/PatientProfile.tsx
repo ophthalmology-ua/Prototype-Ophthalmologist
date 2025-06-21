@@ -13,11 +13,14 @@ import {
   Upload,
   ClipboardList,
   Info,
-  ChevronDown
+  ChevronDown,
+  Syringe
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, Legend, TooltipProps } from 'recharts';
 import { useLanguage } from '../contexts/LanguageContext';
 import { ValueType, NameType } from 'recharts/types/component/DefaultTooltipContent';
+import InterventionsList from '../components/InterventionsList';
+import { Intervention } from '../components/InterventionUpload';
 
 interface Treatment {
   date: string;
@@ -316,6 +319,89 @@ const mockConsultations = [
     planTerapeutico: 'Ninguno',
     proximoControl: '2024-12-10',
   },
+];
+
+// Mock interventions data
+const mockInterventions: Intervention[] = [
+  {
+    id: '1',
+    type: 'injection',
+    subtype: 'Inyección intravítrea anti-VEGF',
+    date: '2024-03-15',
+    time: '10:30',
+    eye: 'OD',
+    medication: 'Aflibercept',
+    dosage: '2mg/0.05ml',
+    surgeon: 'Dr. Injection',
+    assistantSurgeon: 'Dra. Ayudante',
+    anesthesiologist: 'Dr. Anestesista',
+    instrumentator: 'Lic. Instrumentador',
+    anesthesiaType: 'Tópica',
+    notes: 'Procedimiento realizado sin complicaciones. Paciente toleró bien la inyección.',
+    outcome: 'Procedimiento exitoso. Sin reacciones adversas inmediatas.',
+    complications: '',
+    nextFollowUp: '2024-05-15',
+    files: [],
+    isCompleted: true
+  },
+  {
+    id: '2',
+    type: 'surgery',
+    subtype: 'Vitrectomía',
+    date: '2024-01-20',
+    time: '08:00',
+    eye: 'OI',
+    surgeon: 'Dr. Carlos Mendoza',
+    assistantSurgeon: 'Dra. Ana López',
+    anesthesiologist: 'Dr. Pablo Ruiz',
+    instrumentator: 'Lic. Marta Gómez',
+    anesthesiaType: 'General',
+    notes: 'Vitrectomía pars plana para tratamiento de membrana epirretiniana. Procedimiento estándar.',
+    outcome: 'Cirugía exitosa. Membrana removida completamente. Recuperación visual esperada.',
+    complications: '',
+    nextFollowUp: '2024-02-20',
+    files: [],
+    isCompleted: true
+  },
+  {
+    id: '3',
+    type: 'laser',
+    subtype: 'Láser YAG',
+    date: '2024-02-10',
+    time: '09:00',
+    eye: 'OD',
+    laserType: 'YAG',
+    surgeon: 'Dr. Laser',
+    assistantSurgeon: 'Dra. Luz',
+    anesthesiologist: 'Dr. Anestesista',
+    instrumentator: 'Lic. Instrumentador',
+    anesthesiaType: 'Tópica',
+    notes: 'Capsulotomía posterior con láser YAG. Procedimiento sin complicaciones.',
+    outcome: 'Mejoría en la agudeza visual. Sin complicaciones.',
+    complications: '',
+    nextFollowUp: '2024-03-10',
+    files: [],
+    isCompleted: true
+  },
+  {
+    id: '4',
+    type: 'other',
+    subtype: 'Procedimiento especial',
+    date: '2024-04-01',
+    time: '14:00',
+    eye: 'Both',
+    surgeon: 'Dr. Especialista',
+    assistantSurgeon: 'Dra. Ayudante Especial',
+    anesthesiologist: 'Dr. Anestesista Especial',
+    instrumentator: 'Lic. Instrumentador Especial',
+    anesthesiaType: 'Sedación',
+    notes: 'Procedimiento especial realizado bajo sedación.',
+    outcome: 'Sin complicaciones.',
+    complications: '',
+    nextFollowUp: '2024-05-01',
+    files: [],
+    isCompleted: true
+  }
 ];
 
 // Type for a consultation object
@@ -1361,7 +1447,7 @@ function SubirTab() {
 
 const PatientProfile = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('subir');
+  const [activeTab, setActiveTab] = useState('interventions');
   const { t, language } = useLanguage();
   const [selectedDiagnosis, setSelectedDiagnosis] = useState('dmae');
   const [pendingActions, setPendingActions] = useState([
@@ -1372,6 +1458,26 @@ const PatientProfile = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newPending, setNewPending] = useState('');
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
+  
+  // Interventions state
+  const [interventions, setInterventions] = useState<Intervention[]>(mockInterventions);
+
+  // Interventions handlers
+  const handleAddIntervention = (intervention: Intervention) => {
+    setInterventions(prev => [...prev, intervention]);
+  };
+
+  const handleUpdateIntervention = (id: string, updatedIntervention: Intervention) => {
+    setInterventions(prev => 
+      prev.map(intervention => 
+        intervention.id === id ? { ...updatedIntervention, id } : intervention
+      )
+    );
+  };
+
+  const handleDeleteIntervention = (id: string) => {
+    setInterventions(prev => prev.filter(intervention => intervention.id !== id));
+  };
 
   const handleAddPending = () => {
     setIsModalOpen(true);
@@ -1551,6 +1657,7 @@ const PatientProfile = () => {
                 { id: 'subir', label: 'Subir', icon: ClipboardList },
                 { id: 'overview', label: 'Resumen', icon: Eye },
                 { id: 'consultations', label: 'Consultas', icon: FileText },
+                { id: 'interventions', label: 'Intervenciones', icon: Syringe },
                 { id: 'diagnosis', label: 'Diagnósticos', icon: Activity },
                 { id: 'progression', label: 'Seguimiento', icon: TrendingUp },
                 { id: 'appointments', label: 'Citas', icon: Calendar },
@@ -1629,6 +1736,16 @@ const PatientProfile = () => {
                   <ConsultationAccordion key={c.id} consultation={c} defaultOpen={idx === 0} />
                 ))}
               </div>
+            )}
+
+            {activeTab === 'interventions' && (
+              <InterventionsList
+                interventions={interventions}
+                onAddIntervention={handleAddIntervention}
+                onUpdateIntervention={handleUpdateIntervention}
+                onDeleteIntervention={handleDeleteIntervention}
+                patientName={mockPatient.name}
+              />
             )}
 
             {activeTab === 'diagnosis' && (

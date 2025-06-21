@@ -12,6 +12,7 @@ import Login from './pages/Login';
 import DiagnosisDetail from './pages/DiagnosisDetail';
 import RecordDetail from './pages/RecordDetail';
 import UploadConsultation from './pages/UploadConsultation';
+import InterventionDetail from './pages/InterventionDetail';
 
 function App() {
   return (
@@ -30,6 +31,7 @@ function App() {
             <Route path="diagnosis/:id" element={<DiagnosisDetail />} />
             <Route path="records/:id" element={<RecordDetail />} />
             <Route path="upload-consultation" element={<UploadConsultation />} />
+            <Route path="intervention/:id" element={<InterventionDetail />} />
           </Route>
         </Routes>
       </Router>
