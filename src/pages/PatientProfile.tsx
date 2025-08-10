@@ -6,7 +6,7 @@ import {
   Activity, 
   FileText, 
   Eye, 
-  AlertCircle,
+
   ChevronRight,
   Plus,
   TrendingUp,
@@ -14,8 +14,12 @@ import {
   ClipboardList,
   Info,
   ChevronDown,
-  Syringe
+  Syringe,
+  CheckSquare
 } from 'lucide-react';
+import PatientChecklist, { ChecklistItem } from '../components/PatientChecklist';
+import BookingModal from '../components/BookingModal';
+
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, Legend, TooltipProps } from 'recharts';
 import { useLanguage } from '../contexts/LanguageContext';
 import { ValueType, NameType } from 'recharts/types/component/DefaultTooltipContent';
@@ -439,7 +443,9 @@ interface Study {
   fields: Record<string, string>;
 }
 
-function SubirTab() {
+const SubirTab = ({ modalPrefillData }: { modalPrefillData: any }) => {
+  // Ensure modalPrefillData has a default value to prevent errors
+  const safeModalData = modalPrefillData || {};
   // Patient data
   const [patientData, setPatientData] = useState({
     name: '',
@@ -1435,6 +1441,82 @@ function SubirTab() {
         <h2 className="font-bold text-lg mb-4">Próximo control</h2>
         <input className="w-full border rounded px-3 py-2 mb-2" placeholder="Próximo control (fecha)" value={proximoControl} onChange={e => setProximoControl(e.target.value)} />
       </div>
+      
+      {/* Checklist Items Section - for marking todos as done when uploading study */}
+      <div className="bg-white rounded-xl p-6 border">
+        <h2 className="font-bold text-lg mb-4 flex items-center">
+          <CheckSquare className="w-5 h-5 mr-2" />
+          Lista de Verificación - Marcar como Completado
+        </h2>
+        <p className="text-gray-600 mb-4">
+          Marca los elementos de la lista de verificación que se completan con este estudio:
+        </p>
+        
+        {/* Display relevant checklist items if available from modalPrefillData */}
+        {safeModalData?.checklistItemId && (
+          <div className="space-y-3">
+            <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-medium text-blue-900">{safeModalData.description || 'Estudio relacionado'}</h4>
+                  <p className="text-sm text-blue-700">
+                    Prioridad: <span className="font-medium">{safeModalData.priority}</span> | 
+                    Estado: <span className="font-medium">{safeModalData.status}</span>
+                  </p>
+                  {safeModalData.dueDate && (
+                    <p className="text-sm text-blue-600">
+                      Fecha límite: {new Date(safeModalData.dueDate).toLocaleDateString()}
+                    </p>
+                  )}
+                </div>
+                <div className="flex items-center space-x-2">
+                  <button
+                    type="button"
+                    className="px-3 py-1 bg-green-100 text-green-700 rounded-md hover:bg-green-200 transition-colors"
+                    onClick={() => {
+                      // Mark this checklist item as completed
+                      // This would typically update the checklist state
+                      alert('Elemento marcado como completado: ' + safeModalData.description);
+                    }}
+                  >
+                    <CheckSquare className="w-4 h-4 mr-1" />
+                    Marcar Completado
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* General checklist items that might be relevant for study uploads */}
+        <div className="mt-4 space-y-2">
+          <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+            <input type="checkbox" id="checklist-1" className="w-4 h-4 text-blue-600 rounded" />
+            <label htmlFor="checklist-1" className="text-sm text-gray-700">
+              Estudio procesado y analizado
+            </label>
+          </div>
+          <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+            <input type="checkbox" id="checklist-2" className="w-4 h-4 text-blue-600 rounded" />
+            <label htmlFor="checklist-2" className="text-sm text-gray-700">
+              Informe médico generado
+            </label>
+          </div>
+          <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+            <input type="checkbox" id="checklist-3" className="w-4 h-4 text-blue-600 rounded" />
+            <label htmlFor="checklist-3" className="text-sm text-gray-700">
+              Resultados enviados al paciente
+            </label>
+          </div>
+          <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+            <input type="checkbox" id="checklist-4" className="w-4 h-4 text-blue-600 rounded" />
+            <label htmlFor="checklist-4" className="text-sm text-gray-700">
+              Próxima cita programada si es necesario
+            </label>
+          </div>
+        </div>
+      </div>
+      
       {/* Save Button */}
       <div className="flex justify-end">
         <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
@@ -1450,14 +1532,40 @@ const PatientProfile = () => {
   const [activeTab, setActiveTab] = useState('interventions');
   const { t, language } = useLanguage();
   const [selectedDiagnosis, setSelectedDiagnosis] = useState('dmae');
-  const [pendingActions, setPendingActions] = useState([
-    'Sacar turno de control',
-    'Realizar estudio OCT',
-    'Actualizar datos de contacto'
+  const [checklistItems, setChecklistItems] = useState<ChecklistItem[]>([
+    {
+      id: '1',
+      title: 'Sacar turno de control',
+      category: 'appointment',
+      status: 'pending',
+      priority: 'high',
+      description: 'Programar próxima cita de seguimiento'
+    },
+    {
+      id: '2',
+      title: 'Realizar estudio OCT',
+      category: 'examination',
+      status: 'pending',
+      priority: 'high',
+      description: 'Estudio de OCT para seguimiento de DMAE'
+    },
+    {
+      id: '3',
+      title: 'Actualizar datos de contacto',
+      category: 'documentation',
+      status: 'pending',
+      priority: 'medium',
+      description: 'Verificar y actualizar información de contacto'
+    }
   ]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newPending, setNewPending] = useState('');
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
+  
+  // Modal states for checklist actions
+  const [showAppointmentModal, setShowAppointmentModal] = useState(false);
+  const [showStudyModal, setShowStudyModal] = useState(false);
+  const [showTreatmentModal, setShowTreatmentModal] = useState(false);
+  const [showDocumentModal, setShowDocumentModal] = useState(false);
+  const [modalPrefillData, setModalPrefillData] = useState<any>(null);
   
   // Interventions state
   const [interventions, setInterventions] = useState<Intervention[]>(mockInterventions);
@@ -1479,22 +1587,45 @@ const PatientProfile = () => {
     setInterventions(prev => prev.filter(intervention => intervention.id !== id));
   };
 
-  const handleAddPending = () => {
-    setIsModalOpen(true);
+  // Checklist modal handlers
+  const handleOpenAppointmentModal = (prefillData: any) => {
+    // Add patient information to the prefill data
+    const enhancedPrefillData = {
+      ...prefillData,
+      patientId: mockPatient.id,
+      patientName: mockPatient.name,
+      patientPhone: mockPatient.contactNumber,
+      patientEmail: mockPatient.email
+    };
+    setModalPrefillData(enhancedPrefillData);
+    setShowAppointmentModal(true);
   };
 
-  const handleModalAdd = () => {
-    if (newPending.trim() !== '') {
-      setPendingActions(prev => [...prev, newPending.trim()]);
-      setNewPending('');
-      setIsModalOpen(false);
+  const handleOpenStudyModal = (prefillData: any) => {
+    // Check if this is for uploading a study
+    if (prefillData?.action === 'upload') {
+      // Navigate to the SubirTab with the checklist data
+      setActiveTab('subir');
+      // Store the checklist data for use in the upload form
+      setModalPrefillData(prefillData);
+    } else {
+      // Regular study modal for scheduling
+      setModalPrefillData(prefillData);
+      setShowStudyModal(true);
     }
   };
 
-  const handleModalCancel = () => {
-    setNewPending('');
-    setIsModalOpen(false);
+  const handleOpenTreatmentModal = (prefillData: any) => {
+    setModalPrefillData(prefillData);
+    setShowTreatmentModal(true);
   };
+
+  const handleOpenDocumentModal = (prefillData: any) => {
+    setModalPrefillData(prefillData);
+    setShowDocumentModal(true);
+  };
+
+
 
   const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString(language === 'en' ? 'en-US' : 'es-ES', {
@@ -1662,7 +1793,7 @@ const PatientProfile = () => {
                 { id: 'progression', label: 'Seguimiento', icon: TrendingUp },
                 { id: 'appointments', label: 'Citas', icon: Calendar },
                 { id: 'studies', label: 'Estudios', icon: FileText },
-                { id: 'pending', label: 'Pendiente', icon: AlertCircle }
+                { id: 'checklist', label: 'Checklist', icon: CheckSquare }
               ].map(tab => {
                 const Icon = tab.icon;
                 return (
@@ -1936,62 +2067,184 @@ const PatientProfile = () => {
               </div>
             )}
 
-            {activeTab === 'pending' && (
+            {activeTab === 'checklist' && (
               <div className="space-y-4">
-                <button
-                  className="mb-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition font-medium"
-                  onClick={handleAddPending}
-                >
-                  Agregar pendiente
-                </button>
-                {isModalOpen && (
-                  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
-                    <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-sm">
-                      <h3 className="text-lg font-semibold mb-4">Agregar acción pendiente</h3>
-                      <input
-                        type="text"
-                        className="w-full border border-gray-300 rounded px-3 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-200"
-                        placeholder="Describe la acción pendiente..."
-                        value={newPending}
-                        onChange={e => setNewPending(e.target.value)}
-                        autoFocus
-                      />
-                      <div className="flex justify-end gap-2">
-                        <button
-                          className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 transition"
-                          onClick={handleModalCancel}
-                        >
-                          Cancelar
-                        </button>
-                        <button
-                          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition font-medium"
-                          onClick={handleModalAdd}
-                          disabled={newPending.trim() === ''}
-                        >
-                          Agregar
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-                <div className="bg-yellow-50 rounded-lg p-4 flex items-center gap-4">
-                  <AlertCircle className="w-6 h-6 text-yellow-600" />
-                  <div>
-                    <p className="font-semibold text-yellow-800">Acciones pendientes</p>
-                    <ul className="list-disc ml-5 text-yellow-900">
-                      {pendingActions.map((action, idx) => (
-                        <li key={idx}>{action}</li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
+                <PatientChecklist
+                  patientId={mockPatient.id}
+                  patient={mockPatient}
+                  initialItems={checklistItems}
+                  onItemsChange={setChecklistItems}
+                  onOpenAppointmentModal={handleOpenAppointmentModal}
+                  onOpenStudyModal={handleOpenStudyModal}
+                  onOpenTreatmentModal={handleOpenTreatmentModal}
+                  onOpenDocumentModal={handleOpenDocumentModal}
+                />
               </div>
             )}
 
-            {activeTab === 'subir' && <SubirTab />}
+            {activeTab === 'subir' && <SubirTab modalPrefillData={modalPrefillData} />}
           </div>
         </div>
       </div>
+
+      {/* Checklist Action Modals */}
+      <BookingModal
+        isOpen={showAppointmentModal}
+        onClose={() => setShowAppointmentModal(false)}
+        onBooking={(bookingData) => {
+          console.log('Booking appointment with data:', bookingData);
+          // Here you would handle the actual appointment booking
+          // You can also update the checklist item status if needed
+        }}
+        prefillData={modalPrefillData}
+      />
+
+      {showStudyModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <h2 className="text-xl font-bold text-gray-800 mb-4">Programar Estudio</h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de Estudio</label>
+                <input
+                  type="text"
+                  value={modalPrefillData?.studyType || ''}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                  readOnly
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+                <input
+                  type="text"
+                  value={modalPrefillData?.description || ''}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                  readOnly
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Preparación Requerida</label>
+                <input
+                  type="text"
+                  value={modalPrefillData?.requiredPreparation || ''}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                  readOnly
+                />
+              </div>
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={() => setShowStudyModal(false)}
+                  className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => {
+                    // Here you would handle the actual study scheduling
+                    console.log('Scheduling study with data:', modalPrefillData);
+                    setShowStudyModal(false);
+                  }}
+                  className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+                >
+                  Programar Estudio
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showTreatmentModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <h2 className="text-xl font-bold text-gray-800 mb-4">Ver Tratamiento</h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de Consulta</label>
+                <input
+                  type="text"
+                  value={modalPrefillData?.consultationType || ''}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                  readOnly
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Diagnóstico</label>
+                <input
+                  type="text"
+                  value={modalPrefillData?.diagnosis || ''}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                  readOnly
+                />
+              </div>
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={() => setShowTreatmentModal(false)}
+                  className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
+                >
+                  Cerrar
+                </button>
+                <button
+                  onClick={() => {
+                    // Here you would navigate to the treatment page or open treatment details
+                    console.log('Viewing treatment with data:', modalPrefillData);
+                    setShowTreatmentModal(false);
+                  }}
+                  className="flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700"
+                >
+                  Ver Detalles
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showDocumentModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <h2 className="text-xl font-bold text-gray-800 mb-4">Ver Documentos</h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de Documento</label>
+                <input
+                  type="text"
+                  value={modalPrefillData?.documentType || ''}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                  readOnly
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Documentos Requeridos</label>
+                <input
+                  type="text"
+                  value={modalPrefillData?.requiredDocuments || ''}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                  readOnly
+                />
+              </div>
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={() => setShowDocumentModal(false)}
+                  className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
+                >
+                  Cerrar
+                </button>
+                <button
+                  onClick={() => {
+                    // Here you would navigate to the documents page or open document details
+                    console.log('Viewing documents with data:', modalPrefillData);
+                    setShowDocumentModal(false);
+                  }}
+                  className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                >
+                  Ver Documentos
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

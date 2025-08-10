@@ -14,45 +14,47 @@ interface Patient {
   status: 'Active' | 'Inactive' | 'Pending';
 }
 
-const mockPatients: Patient[] = [
-  {
-    id: 'P001',
-    name: 'John Smith',
-    age: 65,
-    gender: 'Male',
-    diagnosis: 'Age-related Macular Degeneration',
-    lastVisit: '2024-03-15',
-    nextAppointment: '2024-04-15',
-    status: 'Active',
-  },
-  {
-    id: 'P002',
-    name: 'Mary Johnson',
-    age: 58,
-    gender: 'Female',
-    diagnosis: 'Diabetic Retinopathy',
-    lastVisit: '2024-03-10',
-    nextAppointment: '2024-03-25',
-    status: 'Active',
-  },
-  {
-    id: 'P003',
-    name: 'Robert Davis',
-    age: 72,
-    gender: 'Male',
-    diagnosis: 'Wet AMD',
-    lastVisit: '2024-02-28',
-    nextAppointment: null,
-    status: 'Inactive',
-  },
-  // Add more mock patients as needed
-];
+
 
 export default function PatientList() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'Active' | 'Inactive' | 'Pending'>('all');
   const { t } = useLanguage();
+
+  const mockPatients: Patient[] = [
+    {
+      id: 'P001',
+      name: 'John Smith',
+      age: 65,
+      gender: t('male'),
+      diagnosis: t('ageRelatedMacularDegeneration'),
+      lastVisit: '2024-03-15',
+      nextAppointment: '2024-04-15',
+      status: 'Active',
+    },
+    {
+      id: 'P002',
+      name: 'Mary Johnson',
+      age: 58,
+      gender: t('female'),
+      diagnosis: t('diabeticRetinopathy'),
+      lastVisit: '2024-03-10',
+      nextAppointment: '2024-03-25',
+      status: 'Active',
+    },
+    {
+      id: 'P003',
+      name: 'Robert Davis',
+      age: 72,
+      gender: t('male'),
+      diagnosis: t('wetAMD'),
+      lastVisit: '2022-02-28',
+      nextAppointment: null,
+      status: 'Inactive',
+    },
+    // Add more mock patients as needed
+  ];
 
   const stats = {
     totalPatients: mockPatients.length,

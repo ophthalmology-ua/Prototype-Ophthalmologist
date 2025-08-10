@@ -39,7 +39,7 @@ const MainLayout = () => {
               <div className="w-8 h-8 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
                 <ClipboardList className="w-5 h-5 text-white" />
               </div>
-              <h1 className="text-xl font-bold text-white">OphthalCMS</h1>
+              <h1 className="text-xl font-bold text-white">{t('appName')}</h1>
             </div>
           </div>
           {/* Navigation */}
@@ -74,7 +74,7 @@ const MainLayout = () => {
                 <span className="text-white font-medium">DS</span>
               </div>
               <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">Dr. Smith</p>
+                <p className="text-sm font-medium text-gray-900">{t('doctorName')}</p>
                 <p className="text-xs text-gray-500">{t('doctor')}</p>
               </div>
               <button className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors">
@@ -89,7 +89,7 @@ const MainLayout = () => {
         <button onClick={() => setMobileMenuOpen(true)} className="p-2 rounded-lg text-gray-600 hover:text-blue-600 hover:bg-blue-50 focus:outline-none">
           <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" /></svg>
         </button>
-        <h2 className="text-lg font-semibold text-gray-800">OphthalCMS</h2>
+        <h2 className="text-lg font-semibold text-gray-800">{t('appName')}</h2>
         <LanguageSwitcher />
       </header>
       {/* Mobile menu drawer */}
@@ -101,7 +101,7 @@ const MainLayout = () => {
               <div className="w-8 h-8 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
                 <ClipboardList className="w-5 h-5 text-white" />
               </div>
-              <h1 className="text-xl font-bold text-white">OphthalCMS</h1>
+              <h1 className="text-xl font-bold text-white">{t('appName')}</h1>
             </div>
             <nav className="flex-1 p-4 space-y-1">
               {navigation.map((item) => {
@@ -133,7 +133,7 @@ const MainLayout = () => {
                   <span className="text-white font-medium">DS</span>
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-900">Dr. Smith</p>
+                  <p className="text-sm font-medium text-gray-900">{t('doctorName')}</p>
                   <p className="text-xs text-gray-500">{t('doctor')}</p>
                 </div>
                 <button className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors">

@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { Intervention } from '../components/InterventionUpload';
 import React from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 // Mock interventions (copy from PatientProfile for now)
 const mockInterventions: Intervention[] = [
@@ -88,10 +89,11 @@ const mockInterventions: Intervention[] = [
 const InterventionDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const intervention = mockInterventions.find(i => i.id === id);
 
   if (!intervention) {
-    return <div className="p-8">Intervención no encontrada.</div>;
+    return <div className="p-8">{t('interventionNotFound')}</div>;
   }
 
   return (
@@ -100,42 +102,42 @@ const InterventionDetail: React.FC = () => {
         className="mb-6 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
         onClick={() => navigate(-1)}
       >
-        Volver
+        {t('back')}
       </button>
       <div className="bg-white rounded-xl shadow p-6 border space-y-4">
         <h2 className="text-2xl font-bold mb-2">{intervention.subtype}</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div><span className="font-semibold">Tipo:</span> {intervention.type}</div>
-          <div><span className="font-semibold">Fecha:</span> {intervention.date}</div>
-          <div><span className="font-semibold">Hora:</span> {intervention.time}</div>
-          <div><span className="font-semibold">Ojo:</span> {intervention.eye}</div>
-          {intervention.medication && <div><span className="font-semibold">Medicación:</span> {intervention.medication}</div>}
-          {intervention.dosage && <div><span className="font-semibold">Dosis:</span> {intervention.dosage}</div>}
-          {intervention.laserType && <div><span className="font-semibold">Tipo de láser:</span> {intervention.laserType}</div>}
-          {intervention.surgeon && <div><span className="font-semibold">Cirujano:</span> {intervention.surgeon}</div>}
-          {intervention.assistantSurgeon && <div><span className="font-semibold">Cirujano asistente:</span> {intervention.assistantSurgeon}</div>}
-          {intervention.anesthesiologist && <div><span className="font-semibold">Anestesiólogo:</span> {intervention.anesthesiologist}</div>}
-          {intervention.instrumentator && <div><span className="font-semibold">Instrumentador/a:</span> {intervention.instrumentator}</div>}
-          {intervention.anesthesiaType && <div><span className="font-semibold">Tipo de anestesia:</span> {intervention.anesthesiaType}</div>}
-          {intervention.nextFollowUp && <div><span className="font-semibold">Próximo seguimiento:</span> {intervention.nextFollowUp}</div>}
+          <div><span className="font-semibold">{t('type')}:</span> {intervention.type}</div>
+          <div><span className="font-semibold">{t('date')}:</span> {intervention.date}</div>
+          <div><span className="font-semibold">{t('time')}:</span> {intervention.time}</div>
+          <div><span className="font-semibold">{t('eye')}:</span> {intervention.eye}</div>
+          {intervention.medication && <div><span className="font-semibold">{t('medication')}:</span> {intervention.medication}</div>}
+          {intervention.dosage && <div><span className="font-semibold">{t('dose')}:</span> {intervention.dosage}</div>}
+          {intervention.laserType && <div><span className="font-semibold">{t('laserType')}:</span> {intervention.laserType}</div>}
+          {intervention.surgeon && <div><span className="font-semibold">{t('surgeon')}:</span> {intervention.surgeon}</div>}
+          {intervention.assistantSurgeon && <div><span className="font-semibold">{t('assistantSurgeon')}:</span> {intervention.assistantSurgeon}</div>}
+          {intervention.anesthesiologist && <div><span className="font-semibold">{t('anesthesiologist')}:</span> {intervention.anesthesiologist}</div>}
+          {intervention.instrumentator && <div><span className="font-semibold">{t('instrumentator')}:</span> {intervention.instrumentator}</div>}
+          {intervention.anesthesiaType && <div><span className="font-semibold">{t('anesthesiaType')}:</span> {intervention.anesthesiaType}</div>}
+          {intervention.nextFollowUp && <div><span className="font-semibold">{t('nextFollowUp')}:</span> {intervention.nextFollowUp}</div>}
         </div>
         <div>
-          <span className="font-semibold">Notas:</span>
+          <span className="font-semibold">{t('notes')}:</span>
           <div className="bg-gray-50 rounded p-2 mt-1">{intervention.notes}</div>
         </div>
         <div>
-          <span className="font-semibold">Resultado:</span>
+          <span className="font-semibold">{t('result')}:</span>
           <div className="bg-gray-50 rounded p-2 mt-1">{intervention.outcome}</div>
         </div>
         {intervention.complications && (
           <div>
-            <span className="font-semibold">Complicaciones:</span>
+            <span className="font-semibold">{t('complications')}:</span>
             <div className="bg-red-50 rounded p-2 mt-1">{intervention.complications}</div>
           </div>
         )}
         {intervention.files && intervention.files.length > 0 && (
           <div>
-            <span className="font-semibold">Archivos adjuntos:</span>
+            <span className="font-semibold">{t('attachedFiles')}:</span>
             <ul className="list-disc ml-6 mt-1">
               {intervention.files.map((file, idx) => (
                 <li key={idx}>{file.name}</li>
@@ -144,7 +146,7 @@ const InterventionDetail: React.FC = () => {
           </div>
         )}
         <div>
-          <span className="font-semibold">Estado:</span> {intervention.isCompleted ? 'Completado' : 'Pendiente'}
+          <span className="font-semibold">{t('status')}:</span> {intervention.isCompleted ? t('completed') : t('pending')}
         </div>
       </div>
     </div>

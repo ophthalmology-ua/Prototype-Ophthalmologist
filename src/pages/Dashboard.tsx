@@ -5,16 +5,16 @@ const Dashboard = () => {
   const { t } = useLanguage();
 
   const upcomingAppointments = [
-    { id: 1, name: 'John Doe', time: '10:00 AM', type: 'Follow-up' },
-    { id: 2, name: 'Jane Smith', time: '11:30 AM', type: 'Treatment' },
-    { id: 3, name: 'Robert Johnson', time: '2:00 PM', type: 'Consultation' },
+    { id: 1, name: 'John Doe', time: '10:00 AM', type: t('followUp') },
+    { id: 2, name: 'Jane Smith', time: '11:30 AM', type: t('treatment') },
+    { id: 3, name: 'Robert Johnson', time: '2:00 PM', type: t('consultation') },
   ];
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold mb-2">{t('welcomeBack')}, Dr. Smith</h1>
+        <h1 className="text-3xl font-bold mb-2">{t('welcomeBack')}, {t('doctorName')}</h1>
         <p className="text-blue-100">{t('overview')}</p>
       </div>
 
@@ -52,7 +52,7 @@ const Dashboard = () => {
           </div>
           <div className="mt-2">
             <span className="text-2xl font-bold">8</span>
-            <span className="text-green-500 text-sm ml-2">On track</span>
+            <span className="text-green-500 text-sm ml-2">{t('onTrack')}</span>
           </div>
         </div>
       </div>

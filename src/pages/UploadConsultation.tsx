@@ -1,40 +1,40 @@
 import { useState } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 
-// Types for block kinds
-const BLOCKS = [
-  { key: 'visualAcuity', label: 'Agudeza Visual' },
-  { key: 'diagnostic', label: 'Diagnóstico' },
-  { key: 'treatment', label: 'Tratamiento' },
-] as const;
-type BlockType = typeof BLOCKS[number]['key'];
-
-type Block = {
-  type: BlockType;
-};
-
-// Diagnostic and treatment options
-const DIAGNOSTIC_OPTIONS = [
-  'Degeneración macular relacionada con la edad (DMAE) húmeda',
-  'Degeneración macular relacionada con la edad (DMAE) seca',
-  'Membrana epirretiniana',
-  'Agujero macular',
-  'Edema macular diabético',
-  'Coroidopatía serosa central',
-];
-const TREATMENT_OPTIONS = [
-  'Inyecciones intravítreas de anti-VEGF (Aflibercept)',
-  'Inyecciones intravítreas de anti-VEGF (Ranibizumab)',
-  'Inyecciones intravítreas de anti-VEGF (Bevacizumab)',
-  'Fotocoagulación láser',
-  'Observación/seguimiento',
-  'Cirugía de membrana epirretiniana',
-  'Cirugía de agujero macular',
-  'Corticoides intravítreos',
-];
-
 const UploadConsultation = () => {
   const { t } = useLanguage();
+
+  // Types for block kinds
+  const BLOCKS = [
+    { key: 'visualAcuity', label: t('visualAcuity') },
+    { key: 'diagnostic', label: t('diagnostic') },
+    { key: 'treatment', label: t('treatment') },
+  ] as const;
+  type BlockType = typeof BLOCKS[number]['key'];
+
+  type Block = {
+    type: BlockType;
+  };
+
+  // Diagnostic and treatment options
+  const DIAGNOSTIC_OPTIONS = [
+    t('wetAMD'),
+    t('dryAMD'),
+    t('epiretinalMembrane'),
+    t('macularHole'),
+    t('diabeticMacularEdema'),
+    t('centralSerousChoroidopathy'),
+  ];
+  const TREATMENT_OPTIONS = [
+    t('antiVEGFAflibercept'),
+    t('antiVEGFRanibizumab'),
+    t('antiVEGFBevacizumab'),
+    t('laserPhotocoagulation'),
+    t('observationFollowUp'),
+    t('epiretinalMembraneSurgery'),
+    t('macularHoleSurgery'),
+    t('intravitrealCorticosteroids'),
+  ];
   // State for dynamic blocks
   const [blocks, setBlocks] = useState<Block[]>([]);
   // State for block data

@@ -2,33 +2,33 @@ import { useState } from 'react';
 import { FileText, Download, Edit2, ClipboardList, Stethoscope } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 
-// Mock reports data
-const mockReports = [
-  {
-    id: 1,
-    type: 'Clinical Summary',
-    patientName: 'John Doe',
-    date: '2024-04-15',
-    status: 'Draft',
-  },
-  {
-    id: 2,
-    type: 'Prescription',
-    patientName: 'Jane Smith',
-    date: '2024-04-16',
-    status: 'Final',
-  },
-  {
-    id: 3,
-    type: 'Surgical Request',
-    patientName: 'Robert Johnson',
-    date: '2024-04-17',
-    status: 'Pending',
-  },
-];
-
 const Reports = () => {
   const { t } = useLanguage();
+
+  // Mock reports data
+  const mockReports = [
+    {
+      id: 1,
+      type: t('clinicalSummary'),
+      patientName: 'John Doe',
+      date: '2024-04-15',
+      status: t('draft'),
+    },
+    {
+      id: 2,
+      type: t('prescription'),
+      patientName: 'Jane Smith',
+      date: '2024-04-16',
+      status: t('final'),
+    },
+    {
+      id: 3,
+      type: t('surgicalRequest'),
+      patientName: 'Robert Johnson',
+      date: '2024-04-17',
+      status: t('pending'),
+    },
+  ];
   const [selectedReportType, setSelectedReportType] = useState('all');
   const [selectedPatient, setSelectedPatient] = useState('');
 
@@ -47,14 +47,14 @@ const Reports = () => {
             value={selectedReportType}
             onChange={(e) => setSelectedReportType(e.target.value)}
           >
-            <option value="all">All Report Types</option>
-            <option value="Clinical Summary">Clinical Summary</option>
-            <option value="Prescription">Prescription</option>
-            <option value="Surgical Request">Surgical Request</option>
+            <option value="all">{t('allReportTypes')}</option>
+            <option value={t('clinicalSummary')}>{t('clinicalSummary')}</option>
+            <option value={t('prescription')}>{t('prescription')}</option>
+            <option value={t('surgicalRequest')}>{t('surgicalRequest')}</option>
           </select>
           <input
             type="text"
-            placeholder="Search patient..."
+            placeholder={t('searchPatient')}
             className="border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={selectedPatient}
             onChange={(e) => setSelectedPatient(e.target.value)}
@@ -125,19 +125,19 @@ const Reports = () => {
           <thead className="bg-gray-50">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Report Type
+                {t('reportType')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Patient
+                {t('patient')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Date
+                {t('date')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Status
+                {t('status')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Actions
+                {t('actions')}
               </th>
             </tr>
           </thead>
@@ -156,9 +156,9 @@ const Reports = () => {
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span
                     className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      report.status === 'Final'
+                      report.status === t('final')
                         ? 'bg-green-100 text-green-800'
-                        : report.status === 'Draft'
+                        : report.status === t('draft')
                         ? 'bg-yellow-100 text-yellow-800'
                         : 'bg-gray-100 text-gray-800'
                     }`}
@@ -167,10 +167,10 @@ const Reports = () => {
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <button className="text-blue-600 hover:text-blue-900 mr-4">
+                  <button className="text-blue-600 hover:text-blue-900 mr-4" title={t('edit')}>
                     <Edit2 className="w-5 h-5 inline-block" />
                   </button>
-                  <button className="text-green-600 hover:text-green-900">
+                  <button className="text-green-600 hover:text-green-900" title={t('download')}>
                     <Download className="w-5 h-5 inline-block" />
                   </button>
                 </td>

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Eye } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 function validateEmail(email: string) {
   // Simple email regex
@@ -7,6 +8,7 @@ function validateEmail(email: string) {
 }
 
 const Login = () => {
+  const { t } = useLanguage();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -47,7 +49,7 @@ const Login = () => {
         {/* Logo and app name */}
         <div className="flex flex-col items-center mb-6">
           <Eye className="w-10 h-10 text-blue-600 mb-2" />
-          <span className="font-extrabold text-xl tracking-tight text-blue-700">OphthalCMS</span>
+          <span className="font-extrabold text-xl tracking-tight text-blue-700">{t('appName')}</span>
         </div>
         {/* Welcome message */}
         <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2 text-center">Bienvenido</h2>
@@ -110,7 +112,7 @@ const Login = () => {
         )}
         {/* Footer */}
         <div className="mt-8 text-xs text-gray-400 text-center w-full">
-          &copy; {new Date().getFullYear()} OphthalCMS. Todos los derechos reservados.
+          &copy; {new Date().getFullYear()} {t('appName')}. Todos los derechos reservados.
         </div>
       </div>
     </div>
